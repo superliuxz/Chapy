@@ -2,3 +2,4 @@
 *.pdf
 class_diagram*
 aiosimplechat-master/
+.idea/
