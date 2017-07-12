@@ -32,7 +32,7 @@ class UserInputParser:
 		else:
 			## message
 			## the server should promote the user to type in the alias when 1st log in
-			dictionary["verb"] = "say"
+			dictionary["verb"] = "/say"
 			dictionary["body"] = input_str
 
 		parsed_json = json.dumps(dictionary)
