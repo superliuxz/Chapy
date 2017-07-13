@@ -1,6 +1,6 @@
 import json
 
-class UserInputParser:
+class ClientInputParser:
 
 	def __init__(self, usr_alias):
 		'''
@@ -57,23 +57,23 @@ class UserInputParser:
 # some tests
 if __name__ == "__main__":
 
-	p = UserInputParser("will")
+	p = ClientInputParser("will")
 	print(p.parse("test # 1"))
-	p = UserInputParser("will")
+	p = ClientInputParser("will")
 	print(p.parse("/join room1"))
-	p = UserInputParser("will")
+	p = ClientInputParser("will")
 	print(p.parse("/create room1"))
-	p = UserInputParser("will", )
+	p = ClientInputParser("will", )
 	print(p.parse("/set_alias WILL"))
-	p = UserInputParser("will", )
+	p = ClientInputParser("will", )
 	print(p.parse("/block bob"))
-	p = UserInputParser("will", )
+	p = ClientInputParser("will", )
 	print(p.parse("/unblock bob"))
-	p = UserInputParser("will", )
+	p = ClientInputParser("will", )
 	print(p.parse("/delete room1"))
-	p = UserInputParser("will", )
+	p = ClientInputParser("will", )
 	print(p.parse("/DNE_CMD whatever"))
-	p = UserInputParser("will", )
+	p = ClientInputParser("will", )
 	print(p.parse(""))
-	p = UserInputParser("will", )
+	p = ClientInputParser("will", )
 	print(p.parse("/join"))
