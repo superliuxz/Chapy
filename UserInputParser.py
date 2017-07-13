@@ -17,26 +17,42 @@ class UserInputParser:
 
 		:return: the parsed json object
 		'''
-		dictionary = {"validity": 1, "usr":self.usr}
-		parsed_json = ""
+		dictionary = {"status": 1, "usr":self.usr}
+
+		# enter empty string
+		if input_str == "":
+			dictionary.update({"verb":""})
+			dictionary.update({"body":""})
+			dictionary["status"] = -1
+			return dictionary
+
 		if input_str[0] == "/":
 			## commands
 			actions = ["/join", "/create", "/set_alias", "/block", "/unblock", "/delete"]
-			verb, body = input_str.split()
-			if verb in actions:
-				dictionary["verb"] = verb
-				dictionary["body"] = body
-			else:
-				dictionary["validity"] = 0
+			try:
+				verb, body = input_str.split()
+			except ValueError:
+				verb = input_str.split()[0]
+				body = ""
+
+			dictionary["verb"] = verb
+			dictionary["body"] = body
+
+			## invalid command
+			if verb not in actions:
+				dictionary["status"] = -2
+
+			## no argument after command
+			if body == "":
+				dictionary["status"] = -3
+
 
 		else:
 			## message
-			## the server should promote the user to type in the alias when 1st log in
 			dictionary["verb"] = "/say"
 			dictionary["body"] = input_str
 
-		parsed_json = json.dumps(dictionary)
-		return parsed_json
+		return dictionary
 
 # some tests
 if __name__ == "__main__":
@@ -57,3 +73,7 @@ if __name__ == "__main__":
 	print(p.parse("/delete room1"))
 	p = UserInputParser("will", )
 	print(p.parse("/DNE_CMD whatever"))
+	p = UserInputParser("will", )
+	print(p.parse(""))
+	p = UserInputParser("will", )
+	print(p.parse("/join"))

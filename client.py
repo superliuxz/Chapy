@@ -15,21 +15,33 @@ class Client:
 			print('Unable to connect {}@{}'.format(self.host, self.port))
 			sys.exit(1)
 
+		self.alias = self._ask_for_alias()
+
+		self.parser = UserInputParser(self.alias)
+
+	def _ask_for_alias(self):
+		'''
+		ask for the user to set the alias for the first time
+
+		:return:
+		'''
 		while not self.alias:
 			print("Please enter your alias:")
-			tmp = sys.stdin.readline().strip()
+			alias = sys.stdin.readline().strip()
+			if alias == "":
+				continue
 			## send initial message to set alias
-			msg = json.dumps({"usr": "null", "verb": "/set_alias", "body": tmp.strip()})
+			msg = json.dumps({"usr": "null", "verb": "/set_alias", "body": alias})
 			self.s.send(bytes(msg, "utf-8"))
 			## server returns the status of the request
-			success = self.s.recv(4096).decode("utf-8")
+			response = json.loads(self.s.recv(4096).decode("utf-8"))
 
-			if success == "T":
-				self.alias = tmp
+			if response["success"] == "true":
+				return alias
 			else:
 				print("The alias has been used!")
 
-			self.parser = UserInputParser(self.alias)
+
 
 	@staticmethod
 	def prompt():
@@ -37,40 +49,71 @@ class Client:
 		sys.stdout.flush()
 
 	def _read_input(self):
+		'''
+		read the keyboard input then parse to a json object
+
+		:return: the parsed json object
+		'''
 		input = sys.stdin.readline().strip()
 		msg = self.parser.parse(input)
 		return msg
 
 	def _send_to_server(self, msg):
-		self.s.send(bytes(msg, "utf-8"))
+		'''
+		send the json object to the server
+
+		:param msg: the json object
+		:return:
+		'''
+		data = json.dumps(msg)
+		self.s.send(bytes(data, "utf-8"))
 
 	def run_forever(self):
-		while True:
+		'''
+		the loop the keeps listening to both keyboard and the incoming traffic from the server
 
-			read_list, *_ = select.select(self.input_list, [], [])
+		:return:
+		'''
+		try:
+			while True:
+				self.prompt()
 
-			for s in read_list:
-				# from the server
-				if s == self.s:
-					# TODO: data should be recv'd as json objs, so need to convert them
-					data = s.recv(4096)
-					if not data:
-						print("\nDisconnected from the server")
-						sys.exit(1)
+				rlist, wlist, xlist = select.select(self.input_list, [], [])
+
+				for s in rlist:
+					# from the server
+					if s == self.s:
+						# TODO: data should be recv'd as json objs, so need to convert them to nicely printables
+						data = s.recv(4096)
+
+						if not data:
+							print("\nDisconnected from the server")
+							sys.exit(1)
+						else:
+							# TODO: more logic will be added to respond to the response from the server
+							print("\nthe msg recv'd from server {}".format(data))
+
+					# from the keyboard
 					else:
-						print(data)
-						self.prompt()
+						msg = self._read_input()
 
-				# from the keyboard
-				else:
-					msg = self._read_input()
-					self._send_to_server(msg)
-					self.prompt()
+						v = msg["status"]
 
+						if v == -1:
+							print("Please enter something!")
+						elif v == -2:
+							print("Your command {} is invalid".format(msg["verb"]))
+						elif v == -3:
+							print("No argument given after {}".format(msg["verb"]))
+						elif v == 1:
+							self._send_to_server(msg)
 
+		except KeyboardInterrupt:
+			# Ctrl-C to quit
+			self.s.close()
+			sys.exit(0)
 
 if __name__ == "__main__":
 	u = Client()
 	#print(u.alias)
-	Client.prompt()
 	u.run_forever()
