@@ -4,3 +4,5 @@ class_diagram*
 aiosimplechat-master/
 .idea/
 __pycache__/
+asyncio_*
+socket_*
