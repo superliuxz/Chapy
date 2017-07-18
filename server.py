@@ -12,8 +12,8 @@ class Server:
 		self.port = port
 		self.general_chatroom = 0
 
-		self.client_to_alias = {} # {socket:alias}
-		self.alias_to_client = {} # {alias:[socket, current_room]}
+		self.sock_to_alias = {} # {socket:alias}
+		self.alias_to_sock = {} # {alias:[socket, current_room]}
 		self.room_to_alias = {0:set()} # {room:<alias>}
 
 		self.room_owners = {0:None} # {room: owner_alias}
@@ -102,10 +102,10 @@ class Server:
 		:param socket:
 		:return:
 		'''
-		alias = self.client_to_alias[socket]
-		room = self.alias_to_client[alias][1]
-		del self.client_to_alias[socket]
-		del self.alias_to_client[alias]
+		alias = self.sock_to_alias[socket]
+		room = self.alias_to_sock[alias][1]
+		del self.sock_to_alias[socket]
+		del self.alias_to_sock[alias]
 		self.room_to_alias[room].remove(alias)
 
 	def _send(self, dictionary, socket):
@@ -130,8 +130,8 @@ class Server:
 
 		sender = d["usr"]
 
-		for a in self.alias_to_client:
-			sock = self.alias_to_client[a][0]
+		for a in self.alias_to_sock:
+			sock = self.alias_to_sock[a][0]
 			if a != sender:
 				self._send(d, sock)
 
@@ -147,22 +147,30 @@ class Server:
 
 		new_alias = d["body"]
 
-		if new_alias not in self.alias_to_client:
+		if new_alias not in self.alias_to_sock:
 
-			self.client_to_alias[s] = new_alias
+			self.sock_to_alias[s] = new_alias
 			# first time set the alias, room = 0, since first time login
 			if "status" not in d:
-				self.alias_to_client[new_alias] = [s, 0]
+				self.alias_to_sock[new_alias] = [s, 0]
 				self.room_to_alias[0].add(new_alias)
 			# reset current alias
 			else:
 				# todo: need to update the client alias
 				old_alias = d["usr"]
-				current_room = self.alias_to_client[old_alias][1]
-				self.alias_to_client[new_alias] = [s, current_room]
+
+				current_room = self.alias_to_sock[old_alias][1]
+
+				self.alias_to_sock[new_alias] = [s, current_room]
+				del self.alias_to_sock[old_alias]
+				self.sock_to_alias[s] = new_alias
+
 				self.room_to_alias[current_room].remove(old_alias)
 				self.room_to_alias[current_room].add(new_alias)
 
+				print("DEBUG - alias_to_sock", self.alias_to_sock)
+				print("DEBUG - sock_to_alias", self.sock_to_alias)
+				print("DEBUG - room_to_alias", self.room_to_alias)
 
 			d["success"] = "true"
 		else:
