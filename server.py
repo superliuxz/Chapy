@@ -65,15 +65,15 @@ class Server:
 						print(data)
 						# if the client calls socket.close(), the server will receive a empty string
 						if data != b"":
-							d = json.loads(data, encoding="utf-8")
+							d = json.loads(data, encoding = "utf-8")
 
 							# according to the verb, respond accordingly
 							verb = d["verb"]
-
-							# TODO:
+							# TODO: factorize the following into a dedicated class, and use composition
 							if verb == "/say":
 								self._broadcast(d)
 							elif verb == "/set_alias":
+								# TODO: set_alias also needs to update those ones in the owner list, blocked list etc.
 								self._set_alias(d, s)
 							elif verb == "/join":
 								self._join(d, s)
@@ -84,7 +84,7 @@ class Server:
 							elif verb == "/unblock":
 								self._unblock(d, s)
 							elif verb == "/delete":
-								print(d)
+								self._delete(d, s)
 							# elif verb == "/logout":
 							# 	print(s.getpeername())
 							# 	time.sleep(120)
@@ -190,6 +190,14 @@ class Server:
 
 	# /join
 	def _join(self, d, s):
+		'''
+		join a user to the target chatroom
+
+		:param d: the message dictionary
+		:param s: the sender socket
+		:return: void
+		'''
+
 		roomname = d["body"]
 		usrName = d["usr"]
 
@@ -278,6 +286,14 @@ class Server:
 
 	# /unblock
 	def _unblock(self, d, s):
+		'''
+		unblock a user from the chatroom
+
+		:param d: the message dictionary
+		:param s: the sender socket
+		:return:
+		'''
+
 		usrName = d["body"]
 		ownerName = d["usr"]
 
@@ -293,8 +309,38 @@ class Server:
 		self._send(d, s)
 
 	# /delete
-	def _delete(self, d):
-		pass
+	def _delete(self, d, s):
+		'''
+		a user tries to delete a chatroom
+
+		:param d: message dictionary
+		:param s: sender socket
+		:return: void
+		'''
+
+		ownerName = d["usr"]
+
+		if ownerName not in self.owner_to_room:
+			d["success"] = "false"
+
+		else:
+			#ivd = {v: k for k, v in self.owner_to_room.items()}
+			roomName = self.owner_to_room[ownerName]
+			clientList = self.room_to_alias[roomName]  # grab all clients in that room
+
+			##
+			while len(clientList) > 0:
+				client = clientList.pop()
+				self._move(client, roomName, "general")
+
+			del self.room_to_alias[roomName]  # remove the room
+			del self.room_blk_list[roomName]
+			del self.owner_to_room[ownerName]
+			del self.room_to_owner[roomName]
+
+			d["success"] = "true"
+
+		self._send(d, s)
 
 if __name__ == "__main__":
 	server = Server()

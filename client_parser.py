@@ -22,12 +22,29 @@ class ClientInputParser:
 
 		if input_str[0] == "/":
 			## commands
-			actions = ["/join", "/create", "/set_alias", "/block", "/unblock", "/delete"]
+			actions = ["/join", "/create", "/set_alias", "/block", "/unblock", "/delete", "/help"]
+
+
 			try:
 				verb, body = input_str.split()
+
 			except ValueError:
 				verb = input_str.split()[0]
-				body = ""
+
+				if verb == "/help":
+
+					body = "\n/join $chatroom: join a chatroom\n" \
+						   "/set_alias $alias: set an alias\n" \
+						   "/create $chatroom: create a chatroom\n" \
+						   "/block $alias: block a user\n" \
+						   "/unblock $alias: unblock a user\n" \
+						   "/delete $chatroom: delete a chatroom\n" \
+						   "/help: display help message\n"
+
+					dictionary["status"] = 0
+
+				else:
+					body = ""
 
 			dictionary["verb"] = verb
 			dictionary["body"] = body
@@ -39,7 +56,6 @@ class ClientInputParser:
 			## no argument after command
 			if body == "":
 				dictionary["status"] = -3
-
 
 		else:
 			## message

@@ -83,24 +83,25 @@ class Client:
 				for s in rlist:
 					# from the server
 					if s == self.s:
-						# TODO: data should be recv'd as json objs, so need to convert them to nicely printables
 						data = s.recv(4096)
 
 						if not data:
 							print("\nDisconnected from the server")
 							sys.exit(1)
 						else:
-							# TODO: more logic will be added to respond to the response from the server
+							# TODO: factorize the following into a class to handle the response from the server
 							print("\nDEBUG - the msg recv'd from server {}".format(data))
 
 							d = json.loads(data, encoding="utf-8")
 
 							if d["verb"] == "/say":
 								print("\n[{}]: {}".format(d["usr"], d["body"]))
+
 							else:
 								if d["success"] == "true":
 
 									if d["verb"] == "/set_alias":
+										print("\nyour alias has been set to {}".format(d["body"]))
 										self.alias = d["body"]
 
 									elif d["verb"] == "/create":
@@ -112,6 +113,9 @@ class Client:
 									elif d["verb"] == "/block":
 										print("\nyou have blocked {}".format(d["body"]))
 
+									elif d["verb"] == "/delete":
+										print("\nyou have deleted room {}".format(d["body"]))
+
 								else:
 									print("\n{} operation failed!".format(d["verb"]))
 
@@ -121,7 +125,9 @@ class Client:
 
 						v = msg["status"]
 
-						if v == -1:
+						if v == 0:
+							print(msg["body"])
+						elif v == -1:
 							print("Please enter something!")
 						elif v == -2:
 							print("Your command {} is invalid".format(msg["verb"]))
