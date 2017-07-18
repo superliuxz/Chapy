@@ -2,22 +2,16 @@ import json
 
 class ClientInputParser:
 
-	def __init__(self, usr_alias):
-		'''
-		constructor
+	def __init__(self):
+		pass
 
-		:param usr_alias: the alias of the user
-		:param input_str: the user input from stdin
-		'''
-		self.usr = usr_alias
-
-	def parse(self, input_str):
+	def parse(self, usr, input_str):
 		'''
 		parse the user input
 
 		:return: the parsed json object
 		'''
-		dictionary = {"status": 1, "usr":self.usr}
+		dictionary = {"status": 1, "usr":usr}
 
 		# enter empty string
 		if input_str == "":
@@ -57,23 +51,23 @@ class ClientInputParser:
 # some tests
 if __name__ == "__main__":
 
-	p = ClientInputParser("will")
-	print(p.parse("test # 1"))
-	p = ClientInputParser("will")
-	print(p.parse("/join room1"))
-	p = ClientInputParser("will")
-	print(p.parse("/create room1"))
-	p = ClientInputParser("will", )
-	print(p.parse("/set_alias WILL"))
-	p = ClientInputParser("will", )
-	print(p.parse("/block bob"))
-	p = ClientInputParser("will", )
-	print(p.parse("/unblock bob"))
-	p = ClientInputParser("will", )
-	print(p.parse("/delete room1"))
-	p = ClientInputParser("will", )
-	print(p.parse("/DNE_CMD whatever"))
-	p = ClientInputParser("will", )
-	print(p.parse(""))
-	p = ClientInputParser("will", )
-	print(p.parse("/join"))
+	p = ClientInputParser()
+	print(p.parse("will","test # 1"))
+	p = ClientInputParser()
+	print(p.parse("will","/join room1"))
+	p = ClientInputParser()
+	print(p.parse("will","/create room1"))
+	p = ClientInputParser()
+	print(p.parse("will","/set_alias WILL"))
+	p = ClientInputParser()
+	print(p.parse("will","/block bob"))
+	p = ClientInputParser()
+	print(p.parse("will","/unblock bob"))
+	p = ClientInputParser()
+	print(p.parse("will","/delete room1"))
+	p = ClientInputParser()
+	print(p.parse("will","/DNE_CMD whatever"))
+	p = ClientInputParser()
+	print(p.parse("will",""))
+	p = ClientInputParser()
+	print(p.parse("will","/join"))
