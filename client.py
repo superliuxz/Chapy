@@ -17,7 +17,7 @@ class Client:
 
 		self.alias = self._ask_for_alias()
 
-		self.parser = ClientInputParser(self.alias)
+		self.parser = ClientInputParser()
 
 	def _ask_for_alias(self):
 		'''
@@ -55,7 +55,7 @@ class Client:
 		:return: the parsed json object
 		'''
 		input = sys.stdin.readline().strip()
-		msg = self.parser.parse(input)
+		msg = self.parser.parse(self.alias, input)
 		return msg
 
 	def _send_to_server(self, msg):
@@ -91,7 +91,18 @@ class Client:
 							sys.exit(1)
 						else:
 							# TODO: more logic will be added to respond to the response from the server
-							print("\nthe msg recv'd from server {}".format(data))
+							print("\nDEBUG - the msg recv'd from server {}".format(data))
+
+							d = json.loads(data, encoding="utf-8")
+
+							if d["verb"] == "/say":
+								print("\n[{}]: {}".format(d["usr"], d["body"]))
+							else:
+								if d["success"] == "true":
+									if d["verb"] == "/set_alias":
+										self.alias = d["body"]
+								else:
+									print("\n{} operation failed!".format(d["verb"]))
 
 					# from the keyboard
 					else:
