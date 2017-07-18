@@ -10,14 +10,17 @@ class Server:
 		'''
 		self.host = host
 		self.port = port
-		self.general_chatroom = 0
+		self.general_chatroom = "general"
 
 		self.sock_to_alias = {} # {socket:alias}
 		self.alias_to_sock = {} # {alias:[socket, current_room]}
-		self.room_to_alias = {0:set()} # {room:<alias>}
+		self.room_to_alias = {self.general_chatroom:set()} # {room:<alias>}
 
-		self.room_owners = {0:None} # {room: owner_alias}
-		self.room_blk_list = {0:set()} # {room:<blocked_alias>}
+		# integer 1 is the creater of the chatroom. because the user alias must be a string, the user alias can never equal to 1 since they are different type
+		self.owner_to_room = {1:self.general_chatroom}
+		self.room_to_owner = {self.general_chatroom:1} # {room: owner_alias}
+		self.room_blk_list = {self.general_chatroom:set()} # {room:<blocked_alias>}
+
 
 		self.s = socket.socket()
 		self.s.bind((self.host, self.port))
@@ -26,6 +29,15 @@ class Server:
 		self.connections = [self.s]
 
 		print("Sever has started!")
+
+	def debug_print(self):
+		print("DEBUG - alias_to_sock", self.alias_to_sock)
+		print("DEBUG - sock_to_alias", self.sock_to_alias)
+		print("DEBUG - room_to_alias", self.room_to_alias)
+		print("DEBUG - owner_to_room", self.owner_to_room)
+		print("DEBUG - room_to_owner", self.room_to_owner)
+		print("DEBUG - room_blk_list", self.room_blk_list)
+		print()
 
 	def run_forever(self):
 		'''
@@ -64,13 +76,13 @@ class Server:
 							elif verb == "/set_alias":
 								self._set_alias(d, s)
 							elif verb == "/join":
-								print(d)
+								self._join(d, s)
 							elif verb == "/create":
-								print(d)
+								self._create(d, s)
 							elif verb == "/block":
-								print(d)
+								self._block(d, s)
 							elif verb == "/unblock":
-								print(d)
+								self._unblock(d, s)
 							elif verb == "/delete":
 								print(d)
 							# elif verb == "/logout":
@@ -80,7 +92,7 @@ class Server:
 							# 	self.connections.remove(s)
 							# 	s.close()
 							# 	print(self.connections)
-
+							self.debug_print()
 						# client Ctrl-C
 						else:
 							print("{} has logged off.".format(s.getpeername()))
@@ -119,7 +131,6 @@ class Server:
 		data = json.dumps(dictionary)
 		socket.send(bytes(data, "utf-8"))
 
-	# todo: need to implements these
 	def _broadcast(self, d):
 		'''
 		broadcast to other clients in the chatroom
@@ -129,11 +140,13 @@ class Server:
 		'''
 
 		sender = d["usr"]
+		sender_room = self.alias_to_sock[sender][1]
 
 		for a in self.alias_to_sock:
-			sock = self.alias_to_sock[a][0]
+			sock, room = self.alias_to_sock[a]
 			if a != sender:
-				self._send(d, sock)
+				if sender_room == room:
+					self._send(d, sock)
 
 	# /set_alias
 	def _set_alias(self, d, s):
@@ -152,11 +165,10 @@ class Server:
 			self.sock_to_alias[s] = new_alias
 			# first time set the alias, room = 0, since first time login
 			if "status" not in d:
-				self.alias_to_sock[new_alias] = [s, 0]
-				self.room_to_alias[0].add(new_alias)
+				self.alias_to_sock[new_alias] = [s, self.general_chatroom]
+				self.room_to_alias[self.general_chatroom].add(new_alias)
 			# reset current alias
 			else:
-				# todo: need to update the client alias
 				old_alias = d["usr"]
 
 				current_room = self.alias_to_sock[old_alias][1]
@@ -168,11 +180,8 @@ class Server:
 				self.room_to_alias[current_room].remove(old_alias)
 				self.room_to_alias[current_room].add(new_alias)
 
-				print("DEBUG - alias_to_sock", self.alias_to_sock)
-				print("DEBUG - sock_to_alias", self.sock_to_alias)
-				print("DEBUG - room_to_alias", self.room_to_alias)
-
 			d["success"] = "true"
+
 		else:
 			d["success"] = "false"
 
@@ -180,20 +189,108 @@ class Server:
 		self._send(d, s)
 
 	# /join
-	def _join(self, d):
-		pass
+	def _join(self, d, s):
+		roomname = d["body"]
+		usrName = d["usr"]
+
+		if roomname not in self.room_to_owner or usrName in self.room_blk_list[roomname]:
+			d["success"] = "false"
+
+		else:
+			prevInfo = self.alias_to_sock[usrName]
+			prevRoom = prevInfo[1]
+			self._move(usrName, prevRoom, roomname)
+			d["success"] = "true"
+
+		self._send(d, s)
+
+	def _move(self, usr, old_room, new_room):
+		'''
+		move a user from the old room to the new room
+
+		:param usr:
+		:param old_room:
+		:param new_room:
+		:return: void
+		'''
+
+		soc = self.alias_to_sock[usr][0]
+		self.room_to_alias[new_room].add(usr)  # adds the usr to its new desired room
+		try:
+			self.room_to_alias[old_room].remove(usr)  # remove the usr from its previous room
+		except KeyError:
+			pass
+		self.alias_to_sock[usr] = [soc, new_room]  # update usr room info
 
 	# /create
-	def _create(self, d):
-		pass
+	def _create(self, d, s):
+		'''
+		create a new chatroom
+
+		:param d: message dictionary
+		:param s: socket of the sender
+		:return: void
+		'''
+		roomName = d["body"]
+		ownerName = d["usr"]
+
+		if roomName in self.room_to_owner or ownerName in self.owner_to_room:
+			d["success"] = "false"
+
+		else:
+			self.room_to_owner[roomName] = ownerName
+			self.owner_to_room[ownerName] = roomName
+			# self.client_to_alias = {} # {socket:alias} maps socket to usr alias
+			# self.alias_to_client = {} # {alias:[socket, current_room]} map alias to room number and socket
+			self.room_to_alias[roomName] = set()  # {room:<alias>}    set() = all users in the room  room# = 0
+
+			self.room_blk_list[roomName] = set()  # {room:<blocked_alias>}
+
+			d["success"] = "true"
+
+		self._send(d, s)
 
 	# /block
-	def _block(self, d):
-		pass
+	def _block(self, d, s):
+		'''
+		block a user from a chatroom, and the user will be moved to the general chatroom
+
+		:param d: message dictionary
+		:param s: sender socket
+		:return: void
+		'''
+
+		usrName = d["body"]
+		ownerName = d["usr"]
+
+		## if the user is not any room owners, or the blocked user alias DNE, then false
+		if ownerName not in self.owner_to_room or usrName not in self.alias_to_sock:
+			d["success"] = "false"
+
+		else:
+			#ivd = {v: k for k, v in self.room_to_owner.items()}
+			roomName = self.owner_to_room[ownerName]
+			self.room_blk_list[roomName].add(usrName)
+			self._move(usrName, roomName, "general")
+			d["success"] = "true"
+
+		self._send(d, s)
 
 	# /unblock
-	def _unblock(self, d):
-		pass
+	def _unblock(self, d, s):
+		usrName = d["body"]
+		ownerName = d["usr"]
+
+		if ownerName not in self.owner_to_room or usrName not in self.alias_to_sock:
+			d["success"] = "false"
+
+		else:
+			roomName = self.owner_to_room[ownerName]
+			if usrName in self.room_blk_list[roomName]:  # if not in list will result in seg fault
+				self.room_blk_list[roomName].remove(usrName)
+				d["success"] = "true"
+
+		self._send(d, s)
 
 	# /delete
 	def _delete(self, d):

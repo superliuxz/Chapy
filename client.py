@@ -99,8 +99,19 @@ class Client:
 								print("\n[{}]: {}".format(d["usr"], d["body"]))
 							else:
 								if d["success"] == "true":
+
 									if d["verb"] == "/set_alias":
 										self.alias = d["body"]
+
+									elif d["verb"] == "/create":
+										print("\n{} is created!".format(d["body"]))
+
+									elif d["verb"] == "/join":
+										print("\nyou have joined room {}".format(d["body"]))
+
+									elif d["verb"] == "/block":
+										print("\nyou have blocked {}".format(d["body"]))
+
 								else:
 									print("\n{} operation failed!".format(d["verb"]))
 
