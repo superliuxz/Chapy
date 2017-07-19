@@ -1,7 +1,7 @@
 import socket, sys, json, select, time
 
 class Server:
-	def __init__(self, host = socket.gethostname(), port = 8888):
+	def __init__(self, host = socket.gethostname(), port = 8888, debug = True):
 		'''
 		default constructor
 
@@ -10,6 +10,7 @@ class Server:
 		'''
 		self.host = host
 		self.port = port
+		self.debug = debug
 		self.general_chatroom = "general"
 
 		self.sock_to_alias = {} # {socket:alias}
@@ -61,10 +62,10 @@ class Server:
 					# clients send in stuff
 					else:
 						# TODO: need to make sure the client does not send a json longer than 4096!
-						data = s.recv(4096)
-						print(data)
+						data = s.recv(4096).decode("utf-8")
+						if self.debug: print("DEBUG - " + data)
 						# if the client calls socket.close(), the server will receive a empty string
-						if data != b"":
+						if data:
 							d = json.loads(data, encoding = "utf-8")
 
 							# according to the verb, respond accordingly
@@ -87,6 +88,8 @@ class Server:
 								self._delete(d, s)
 							elif verb == "/lsroom":
 								self._lsroom(d, s)
+							elif verb == "/lsusr":
+								self._lsisr(d, s)
 							# elif verb == "/logout":
 							# 	print(s.getpeername())
 							# 	time.sleep(120)
@@ -94,13 +97,14 @@ class Server:
 							# 	self.connections.remove(s)
 							# 	s.close()
 							# 	print(self.connections)
-							self.debug_print()
+							if self.debug: self.debug_print()
 						# client Ctrl-C
 						else:
 							print("{} has logged off.".format(s.getpeername()))
 							self._remove_client(s)
 							self.connections.remove(s)
 							s.close()
+
 		except KeyboardInterrupt:
 			# Ctrl-C to quit
 			for s in self.connections: s.close()
@@ -353,8 +357,27 @@ class Server:
 		:param s: the sender socket
 		:return: void
 		'''
+
 		try:
 			d["rooms"] = list(self.room_to_alias.keys())
+			d["success"] = "true"
+		except:
+			d["success"] = "false"
+
+		self._send(d, s)
+
+	# /lsusr
+	def _lsisr(self, d, s):
+		'''
+		list all users and the rooms they are in
+
+		:param d: the message dictionary
+		:param s: the sender socket
+		:return: void
+		'''
+
+		try:
+			d["live_users"] = [ (a, v[1]) for a, v in self.alias_to_sock.items() ]
 			d["success"] = "true"
 		except:
 			d["success"] = "false"

@@ -1,5 +1,3 @@
-import json
-
 class ClientInputParser:
 
 	def __init__(self):

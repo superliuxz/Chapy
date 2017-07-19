@@ -2,9 +2,10 @@ import socket, sys, json, select
 from client_parser import ClientInputParser
 
 class Client:
-	def __init__(self, host = socket.gethostname(), port = 8888):
+	def __init__(self, host = socket.gethostname(), port = 8888, debug = True):
 		self.host = host
 		self.port = port
+		self.debug = debug
 		self.alias = None
 		self.s = socket.socket()
 		self.input_list = [sys.stdin, self.s]
@@ -25,14 +26,18 @@ class Client:
 
 		:return:
 		'''
+
 		while not self.alias:
 			print("Please enter your alias:")
+
 			alias = sys.stdin.readline().strip()
 			if alias == "":
 				continue
+
 			## send initial message to set alias
 			msg = json.dumps({"usr": "null", "verb": "/set_alias", "body": alias})
 			self.s.send(bytes(msg, "utf-8"))
+
 			## server returns the status of the request
 			response = json.loads(self.s.recv(4096).decode("utf-8"))
 
@@ -83,14 +88,14 @@ class Client:
 				for s in rlist:
 					# from the server
 					if s == self.s:
-						data = s.recv(4096)
+						data = s.recv(4096).decode("utf-8")
 
 						if not data:
 							print("\nDisconnected from the server")
 							sys.exit(1)
 						else:
 							# TODO: factorize the following into a class to handle the response from the server
-							print("\nDEBUG - the msg recv'd from server {}".format(data))
+							if self.debug: print("\nDEBUG - the msg from server {}".format(data))
 
 							d = json.loads(data, encoding="utf-8")
 
@@ -113,6 +118,9 @@ class Client:
 									elif d["verb"] == "/block":
 										print("\nYou have blocked {}".format(d["body"]))
 
+									elif d["verb"] == "/block":
+										print("\nYou have unblocked {}".format(d["body"]))
+
 									elif d["verb"] == "/delete":
 										print("\nYou have deleted room {}".format(d["body"]))
 
@@ -121,6 +129,11 @@ class Client:
 										print("\nAvailable rooms:")
 										for r in rooms:
 											print("\t" + r)
+
+									elif d["verb"] == "/lsusr":
+										print("\nAlive users:")
+										for u in d["live_users"]:
+											print("\t{} in {}".format(*u))
 
 								else:
 									print("\n{} operation failed!".format(d["verb"]))
@@ -148,6 +161,6 @@ class Client:
 			sys.exit(0)
 
 if __name__ == "__main__":
-	u = Client()
+	u = Client(debug = False)
 	#print(u.alias)
 	u.run_forever()
