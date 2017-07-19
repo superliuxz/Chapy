@@ -166,7 +166,7 @@ class Server:
 		if new_alias not in self.alias_to_sock:
 
 			self.sock_to_alias[s] = new_alias
-			# first time set the alias, room = 0, since first time login
+			# first time set the alias, room = "general"
 			if "status" not in d:
 				self.alias_to_sock[new_alias] = [s, self.general_chatroom]
 				self.room_to_alias[self.general_chatroom].add(new_alias)
@@ -187,6 +187,7 @@ class Server:
 
 		else:
 			d["success"] = "false"
+			d["reason"] = "The alias has been used!"
 
 		# return the request to the client
 		self._send(d, s)
@@ -204,14 +205,21 @@ class Server:
 		roomname = d["body"]
 		usrName = d["usr"]
 
-		if roomname not in self.room_to_owner or usrName in self.room_blk_list[roomname]:
+		## the two following condition are mutually exclusive.
+		## if a room DNE, then no user can be blocked from that room.
+		if roomname not in self.room_to_owner:
 			d["success"] = "false"
+			d["reason"] = "The room does not exist!"
+
+		elif usrName in self.room_blk_list[roomname]:
+			d["success"] = "false"
+			d["reason"] = "You are blocked!"
 
 		else:
-			prevInfo = self.alias_to_sock[usrName]
-			prevRoom = prevInfo[1]
-			self._move(usrName, prevRoom, roomname)
-			d["success"] = "true"
+				prevInfo = self.alias_to_sock[usrName]
+				prevRoom = prevInfo[1]
+				self._move(usrName, prevRoom, roomname)
+				d["success"] = "true"
 
 		self._send(d, s)
 
