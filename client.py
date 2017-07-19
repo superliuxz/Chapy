@@ -142,17 +142,17 @@ class Client:
 					else:
 						msg = self._read_input()
 
-						v = msg["status"]
+						status = msg["status"]
 
-						if v == 0:
+						if status == 0:
 							print(msg["body"])
-						elif v == -1:
+						elif status == -1:
 							print("Please enter something!")
-						elif v == -2:
+						elif status == -2:
 							print("Your command {} is invalid".format(msg["verb"]))
-						elif v == -3:
+						elif status == -3:
 							print("No argument given after {}".format(msg["verb"]))
-						elif v == 1:
+						elif status == 1:
 							self._send_to_server(msg)
 
 		except KeyboardInterrupt:
