@@ -20,15 +20,18 @@ class ClientInputParser:
 			dictionary["status"] = -1
 			return dictionary
 
+		# non-empty string
 		if input_str[0] == "/":
-			## commands
-			actions = ["/join", "/create", "/set_alias", "/block", "/unblock", "/delete", "/help"]
 
+			## commands
+			verbs = ["/join", "/create", "/set_alias", "/block", "/unblock", "/delete", "/help", "/lsroom", "/lsusr"]
 
 			try:
 				verb, body = input_str.split()
 
+			## value error means that only the verb is present from the user input: /help, /lsroom and /lsusr
 			except ValueError:
+
 				verb = input_str.split()[0]
 
 				if verb == "/help":
@@ -46,16 +49,16 @@ class ClientInputParser:
 				else:
 					body = ""
 
+					if verb != "/lsroom" and verb != "/lsusr":
+						## valid command but no arguments given
+						dictionary["status"] = -3
+
 			dictionary["verb"] = verb
 			dictionary["body"] = body
 
 			## invalid command
-			if verb not in actions:
+			if verb not in verbs:
 				dictionary["status"] = -2
-
-			## no argument after command
-			if body == "":
-				dictionary["status"] = -3
 
 		else:
 			## message

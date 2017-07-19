@@ -85,6 +85,8 @@ class Server:
 								self._unblock(d, s)
 							elif verb == "/delete":
 								self._delete(d, s)
+							elif verb == "/lsroom":
+								self._lsroom(d, s)
 							# elif verb == "/logout":
 							# 	print(s.getpeername())
 							# 	time.sleep(120)
@@ -339,6 +341,23 @@ class Server:
 			del self.room_to_owner[roomName]
 
 			d["success"] = "true"
+
+		self._send(d, s)
+
+	# /lsroom
+	def _lsroom(self, d, s):
+		'''
+		list all chatrooms on the server
+
+		:param d: the message dictionary
+		:param s: the sender socket
+		:return: void
+		'''
+		try:
+			d["rooms"] = list(self.room_to_alias.keys())
+			d["success"] = "true"
+		except:
+			d["success"] = "false"
 
 		self._send(d, s)
 
