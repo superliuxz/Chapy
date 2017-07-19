@@ -93,12 +93,13 @@ class Client:
 						if not data:
 							print("\nDisconnected from the server")
 							sys.exit(1)
+
 						else:
-							# TODO: factorize the following into a class to handle the response from the server
 							if self.debug: print("\nDEBUG - the msg from server {}".format(data))
 
 							d = json.loads(data, encoding="utf-8")
 
+							# TODO: factorize the following into a class to handle the response from the server
 							if d["verb"] == "/say":
 								print("\n[{}]: {}".format(d["usr"], d["body"]))
 
@@ -136,12 +137,14 @@ class Client:
 											print("\t{} in {}".format(*u))
 
 								else:
+									## TODO: add failed reason?
 									print("\n{} operation failed!".format(d["verb"]))
 
 					# from the keyboard
 					else:
 						msg = self._read_input()
 
+						## TODO: factorize the following logic into a module
 						status = msg["status"]
 
 						if status == 0:

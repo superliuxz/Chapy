@@ -8,8 +8,8 @@ class Server:
 		:param host: default as local machine
 		:param port: default 8888
 		'''
-		self.host = host
-		self.port = port
+		#self.host = host
+		#self.port = port
 		self.debug = debug
 		self.general_chatroom = "general"
 
@@ -17,7 +17,7 @@ class Server:
 		self.alias_to_sock = {} # {alias:[socket, current_room]}
 		self.room_to_alias = {self.general_chatroom:set()} # {room:<alias>}
 
-		# integer 1 is the creater of the chatroom. because the user alias must be a string, the user alias can never equal to 1 since they are different type
+		# integer 1 is the creator of the chatroom. because the user alias must be a string, the user alias can never equal to 1 since they are different type
 		self.owner_to_room = {1:self.general_chatroom}
 		self.room_to_owner = {self.general_chatroom:1} # {room: owner_alias}
 		self.room_blk_list = {self.general_chatroom:set()} # {room:<blocked_alias>}
@@ -26,7 +26,7 @@ class Server:
 		self.s = socket.socket()
 		## https://stackoverflow.com/questions/29217502/socket-error-address-already-in-use
 		self.s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-		self.s.bind((self.host, self.port))
+		self.s.bind((host, port))
 		self.s.listen(5)
 
 		self.connections = [self.s]
@@ -61,7 +61,7 @@ class Server:
 						print("{} has connected!".format(sock.getpeername()))
 						self.connections.append(sock)
 
-					# clients send in stuff
+					# clients inbound traffic
 					else:
 						# TODO: need to make sure the client does not send a json longer than 4096!
 						data = s.recv(4096).decode("utf-8")
@@ -92,14 +92,9 @@ class Server:
 								self._lsroom(d, s)
 							elif verb == "/lsusr":
 								self._lsisr(d, s)
-							# elif verb == "/logout":
-							# 	print(s.getpeername())
-							# 	time.sleep(120)
-							# 	self._remove_client(s)
-							# 	self.connections.remove(s)
-							# 	s.close()
-							# 	print(self.connections)
+
 							if self.debug: self.debug_print()
+
 						# client Ctrl-C
 						else:
 							print("{} has logged off.".format(s.getpeername()))
