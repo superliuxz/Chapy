@@ -1,5 +1,5 @@
 import socket, sys, json, select
-from client_parser import ClientInputParser
+from input_parser import ClientInputParser
 
 class Client:
 	def __init__(self, host = socket.gethostname(), port = 8888, debug = True):
