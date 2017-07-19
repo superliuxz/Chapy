@@ -2,6 +2,6 @@
 
 for i in {1..10000};
 do
-	gnome-terminal -e "./run.sh $i"
+	xfce4-terminal -e "./run.sh $i"
 
 done	
