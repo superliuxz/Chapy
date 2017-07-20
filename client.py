@@ -119,7 +119,7 @@ class Client:
 									elif d["verb"] == "/block":
 										print("\nYou have blocked {}".format(d["body"]))
 
-									elif d["verb"] == "/block":
+									elif d["verb"] == "/unblock":
 										print("\nYou have unblocked {}".format(d["body"]))
 
 									elif d["verb"] == "/delete":
