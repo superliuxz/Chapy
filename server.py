@@ -24,6 +24,7 @@ class Server:
 
 
 		self.s = socket.socket()
+		self.s.setblocking(False)
 		## https://stackoverflow.com/questions/29217502/socket-error-address-already-in-use
 		self.s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 		self.s.bind((host, port))
