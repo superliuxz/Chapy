@@ -181,8 +181,24 @@ class Server:
 				del self.alias_to_sock[old_alias]
 				self.sock_to_alias[s] = new_alias
 
+				## update room_to_alias
 				self.room_to_alias[current_room].remove(old_alias)
 				self.room_to_alias[current_room].add(new_alias)
+
+				## update owner_to_room
+				room = self.owner_to_room[old_alias]
+				del self.owner_to_room[old_alias]
+				self.owner_to_room[new_alias] = room
+
+				## update room_to_owner
+				self.room_to_owner[room] = new_alias
+
+				## update room_blk_list
+				## O(n), slow becoz no reversed dictionary look up
+				for room in self.room_blk_list:
+					if old_alias in self.room_blk_list[room]:
+						self.room_blk_list[room].remove(old_alias)
+						self.room_blk_list[room].add(new_alias)
 
 			d["success"] = "true"
 
@@ -236,7 +252,7 @@ class Server:
 
 		if old_room == new_room:
 			return
-		
+
 		soc = self.alias_to_sock[usr][0]
 		self.room_to_alias[new_room].add(usr)  # adds the usr to its new desired room
 		try:
