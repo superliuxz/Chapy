@@ -9,7 +9,7 @@ class Server:
 		:param port: default 8888
 		'''
 
-		logging.basicConfig(level = logging.INFO, format = '%(message)s')
+		logging.basicConfig(level = logging.DEBUG, format = '%(message)s')
 
 		self.log_flag = log
 		self.general_chatroom = "general"
@@ -99,7 +99,7 @@ class Server:
 
 						# client Ctrl-C
 						else:
-							logging.info("{} has logged off.".format(s.getpeername()))
+							logging.info("{} has logged off.\n".format(s.getpeername()))
 							self._remove_client(s)
 							self.connections.remove(s)
 							s.close()
