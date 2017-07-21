@@ -168,7 +168,7 @@ class Server:
 
 			self.sock_to_alias[s] = new_alias
 			# first time set the alias, room = "general"
-			if "status" not in d:
+			if "usr" not in d:
 				self.alias_to_sock[new_alias] = [s, self.general_chatroom]
 				self.room_to_alias[self.general_chatroom].add(new_alias)
 			# reset current alias
