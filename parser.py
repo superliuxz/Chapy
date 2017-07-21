@@ -120,6 +120,12 @@ class Parser:
 
 	@staticmethod
 	def input_validator(msg):
+		'''
+		validate the parsed user input
+
+		:param msg: parsed user input
+		:return: status if status == 1
+		'''
 
 		status = msg["status"]
 
