@@ -101,7 +101,7 @@ class Client:
 
 							parsed_result = Parser.server_inbound(data)
 
-							## inbound_parser.parse only returns when alias is changed
+							## Parser.server_inbound only returns when alias is changed
 							if parsed_result:
 								self.alias = parsed_result
 
@@ -109,19 +109,12 @@ class Client:
 					else:
 						msg = self._read_input()
 
-						## TODO: factorize the following logic into a module
-						status = msg["status"]
+						v = Parser.input_validator(msg)
 
-						if status == 0:
-							print(msg["body"])
-						elif status == -1:
-							print("Please enter something!")
-						elif status == -2:
-							print("Your command {} is invalid".format(msg["verb"]))
-						elif status == -3:
-							print("No argument given after {}".format(msg["verb"]))
-						elif status == 1:
+						## Parse.input_validator only returns 1 when msg["status"] == 1
+						if v == 1:
 							self._send_to_server(msg)
+
 
 		except KeyboardInterrupt:
 			# Ctrl-C to quit

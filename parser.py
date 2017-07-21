@@ -118,6 +118,23 @@ class Parser:
 				## TODO: add failed reason?
 				print("\n{} operation failed!".format(d["verb"]))
 
+	@staticmethod
+	def input_validator(msg):
+
+		status = msg["status"]
+
+		if status == 1:
+			return status
+		elif status == 0:
+			print(msg["body"])
+		elif status == -1:
+			print("Please enter something!")
+		elif status == -2:
+			print("Your command {} is invalid".format(msg["verb"]))
+		elif status == -3:
+			print("No argument given after {}".format(msg["verb"]))
+
+
 # some tests
 if __name__ == "__main__":
 
