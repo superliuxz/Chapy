@@ -35,8 +35,7 @@ class Client:
 				continue
 
 			## send initial message to set alias
-			msg = json.dumps({"verb": "/set_alias", "body": alias})
-			self.s.send(bytes(msg, "utf-8"))
+			self._send_to_server({"verb": "/set_alias", "body": alias})
 
 			## server returns the status of the request
 			response = json.loads(self.s.recv(4096).decode("utf-8"))
