@@ -1,7 +1,8 @@
 import socket, sys, json, select
-from input_parser import ClientInputParser
+from parser import Parser
 
 class Client:
+
 	def __init__(self, host = socket.gethostname(), port = 8888, debug = True):
 		self.host = host
 		self.port = port
@@ -18,7 +19,6 @@ class Client:
 
 		self.alias = self._ask_for_alias()
 
-		self.parser = ClientInputParser()
 
 	def _ask_for_alias(self):
 		'''
@@ -47,11 +47,11 @@ class Client:
 				print("The alias has been used!")
 
 
-
 	@staticmethod
 	def prompt():
 		sys.stdout.write('Me: ')
 		sys.stdout.flush()
+
 
 	def _read_input(self):
 		'''
@@ -60,8 +60,9 @@ class Client:
 		:return: the parsed json object
 		'''
 		input = sys.stdin.readline().strip()
-		msg = self.parser.parse(self.alias, input)
+		msg = Parser.client_input(self.alias, input)
 		return msg
+
 
 	def _send_to_server(self, msg):
 		'''
@@ -72,6 +73,7 @@ class Client:
 		'''
 		data = json.dumps(msg)
 		self.s.send(bytes(data, "utf-8"))
+
 
 	def run_forever(self):
 		'''
@@ -97,48 +99,11 @@ class Client:
 						else:
 							if self.debug: print("\nDEBUG - the msg from server {}".format(data))
 
-							d = json.loads(data, encoding="utf-8")
+							parsed_result = Parser.server_inbound(data)
 
-							# TODO: factorize the following into a class to handle the response from the server
-							if d["verb"] == "/say":
-								print("\n[{}]: {}".format(d["usr"], d["body"]))
-
-							else:
-								if d["success"] == "true":
-
-									if d["verb"] == "/set_alias":
-										print("\nYour alias has been set to {}".format(d["body"]))
-										self.alias = d["body"]
-
-									elif d["verb"] == "/create":
-										print("\n{} is created!".format(d["body"]))
-
-									elif d["verb"] == "/join":
-										print("\nYou have joined room {}".format(d["body"]))
-
-									elif d["verb"] == "/block":
-										print("\nYou have blocked {}".format(d["body"]))
-
-									elif d["verb"] == "/unblock":
-										print("\nYou have unblocked {}".format(d["body"]))
-
-									elif d["verb"] == "/delete":
-										print("\nYou have deleted room {}".format(d["body"]))
-
-									elif d["verb"] == "/lsroom":
-										rooms = d["rooms"]
-										print("\nAvailable rooms:")
-										for r in rooms:
-											print("\t" + r)
-
-									elif d["verb"] == "/lsusr":
-										print("\nAlive users:")
-										for u in d["live_users"]:
-											print("\t{} in {}".format(*u))
-
-								else:
-									## TODO: add failed reason?
-									print("\n{} operation failed!".format(d["verb"]))
+							## inbound_parser.parse only returns when alias is changed
+							if parsed_result:
+								self.alias = parsed_result
 
 					# from the keyboard
 					else:
@@ -162,6 +127,7 @@ class Client:
 			# Ctrl-C to quit
 			self.s.close()
 			sys.exit(0)
+
 
 if __name__ == "__main__":
 	u = Client(debug = False)
