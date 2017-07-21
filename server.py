@@ -234,6 +234,9 @@ class Server:
 		:return: void
 		'''
 
+		if old_room == new_room:
+			return
+		
 		soc = self.alias_to_sock[usr][0]
 		self.room_to_alias[new_room].add(usr)  # adds the usr to its new desired room
 		try:
