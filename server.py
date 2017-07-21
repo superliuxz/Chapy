@@ -1,16 +1,17 @@
-import socket, sys, json, select, time
+import socket, sys, json, select, logging
 
 class Server:
-	def __init__(self, host = socket.gethostname(), port = 8888, debug = True):
+	def __init__(self, host = socket.gethostname(), port = 8888, log = True):
 		'''
 		default constructor
 
 		:param host: default as local machine
 		:param port: default 8888
 		'''
-		#self.host = host
-		#self.port = port
-		self.debug = debug
+
+		logging.basicConfig(level = logging.INFO, format = '%(message)s')
+
+		self.log_flag = log
 		self.general_chatroom = "general"
 
 		self.sock_to_alias = {} # {socket:alias}
@@ -32,16 +33,16 @@ class Server:
 
 		self.connections = [self.s]
 
-		print("Sever has started!")
+		logging.info("Sever has started!\n")
 
-	def debug_print(self):
-		print("DEBUG - alias_to_sock", self.alias_to_sock)
-		print("DEBUG - sock_to_alias", self.sock_to_alias)
-		print("DEBUG - room_to_alias", self.room_to_alias)
-		print("DEBUG - owner_to_room", self.owner_to_room)
-		print("DEBUG - room_to_owner", self.room_to_owner)
-		print("DEBUG - room_blk_list", self.room_blk_list)
-		print()
+	def server_logging(self):
+		logging.info("DEBUG - alias_to_sock: {}".format(self.alias_to_sock))
+		logging.info("DEBUG - sock_to_alias: {}".format(self.sock_to_alias))
+		logging.info("DEBUG - room_to_alias: {}".format(self.room_to_alias))
+		logging.info("DEBUG - owner_to_room: {}".format(self.owner_to_room))
+		logging.info("DEBUG - room_to_owner: {}".format(self.room_to_owner))
+		logging.info("DEBUG - room_blk_list: {}".format(self.room_blk_list))
+		logging.info("")
 
 	def run_forever(self):
 		'''
@@ -59,14 +60,14 @@ class Server:
 					# new client connection
 					if s == self.s:
 						sock, *_ = self.s.accept()
-						print("{} has connected!".format(sock.getpeername()))
+						logging.info("{} has connected!\n".format(sock.getpeername()))
 						self.connections.append(sock)
 
 					# clients inbound traffic
 					else:
 						# TODO: need to make sure the client does not send a json longer than 4096!
 						data = s.recv(4096).decode("utf-8")
-						if self.debug: print("DEBUG - " + data)
+						if self.log_flag: logging.info("DEBUG - received data: " + data)
 						# if the client calls socket.close(), the server will receive a empty string
 						if data:
 							d = json.loads(data, encoding = "utf-8")
@@ -94,11 +95,11 @@ class Server:
 							elif verb == "/lsusr":
 								self._lsisr(d, s)
 
-							if self.debug: self.debug_print()
+							if self.log_flag: self.server_logging()
 
 						# client Ctrl-C
 						else:
-							print("{} has logged off.".format(s.getpeername()))
+							logging.info("{} has logged off.".format(s.getpeername()))
 							self._remove_client(s)
 							self.connections.remove(s)
 							s.close()
@@ -106,7 +107,7 @@ class Server:
 		except KeyboardInterrupt:
 			# Ctrl-C to quit
 			for s in self.connections: s.close()
-			print("Shutdown the server...")
+			logging.info("Shutdown the server...")
 			sys.exit(0)
 
 
@@ -123,6 +124,8 @@ class Server:
 		del self.sock_to_alias[socket]
 		del self.alias_to_sock[alias]
 		self.room_to_alias[room].remove(alias)
+
+
 
 	def _send(self, dictionary, socket):
 		'''
@@ -185,16 +188,19 @@ class Server:
 				self.room_to_alias[current_room].remove(old_alias)
 				self.room_to_alias[current_room].add(new_alias)
 
-				## update owner_to_room
-				room = self.owner_to_room[old_alias]
-				del self.owner_to_room[old_alias]
-				self.owner_to_room[new_alias] = room
+				try:
+					## update owner_to_room
+					room = self.owner_to_room[old_alias]
+					del self.owner_to_room[old_alias]
+					self.owner_to_room[new_alias] = room
 
-				## update room_to_owner
-				self.room_to_owner[room] = new_alias
+					## update room_to_owner
+					self.room_to_owner[room] = new_alias
+				except KeyError:
+					pass
 
 				## update room_blk_list
-				## O(n), slow becoz no reversed dictionary look up
+				## O(n), not optimized becoz no reversed dictionary look up
 				for room in self.room_blk_list:
 					if old_alias in self.room_blk_list[room]:
 						self.room_blk_list[room].remove(old_alias)

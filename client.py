@@ -1,12 +1,15 @@
-import socket, sys, json, select
+import socket, sys, json, select, logging
 from parser import Parser
 
 class Client:
 
-	def __init__(self, host = socket.gethostname(), port = 8888, debug = True):
+	def __init__(self, host = socket.gethostname(), port = 8888, log = True):
+
+		logging.basicConfig(level = logging.INFO, format = '%(message)s')
+
 		self.host = host
 		self.port = port
-		self.debug = debug
+		self.logging_flag = log
 		self.alias = None
 		self.s = socket.socket()
 		self.input_list = [sys.stdin, self.s]
@@ -96,7 +99,7 @@ class Client:
 							sys.exit(1)
 
 						else:
-							if self.debug: print("\nDEBUG - the msg from server {}".format(data))
+							if self.logging_flag: logging.info("DEBUG - the msg from server {}".format(data))
 
 							parsed_result = Parser.server_inbound(data)
 
@@ -122,6 +125,6 @@ class Client:
 
 
 if __name__ == "__main__":
-	u = Client(debug = False)
+	u = Client(log = False)
 	#print(u.alias)
 	u.run_forever()
