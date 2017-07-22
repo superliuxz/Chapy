@@ -3,12 +3,12 @@ from ServerInfoExpert import ServerInfoExpert
 
 class Server:
 	def __init__(self, host = socket.gethostname(), port = 8888, log = True):
-		'''
+		"""
 		default constructor
 
 		:param host: default as local machine
 		:param port: default 8888
-		'''
+		"""
 
 		logging.basicConfig(level = logging.DEBUG, format = '%(message)s')
 
@@ -40,11 +40,11 @@ class Server:
 
 
 	def run_forever(self):
-		'''
+		"""
 		the loop keeps listening to all the connected clients, and operates based on the verbs
 
 		:return:
-		'''
+		"""
 		try:
 			while True:
 
@@ -69,26 +69,32 @@ class Server:
 
 							# according to the verb, respond accordingly
 							verb = d["verb"]
-							# TODO: factorize the following into a dedicated class, and use composition
+
+							response = d
+
 							if verb == "/say":
-								self.server_info.broadcast(d)
+								response, s = self.server_info.broadcast(d)
 							elif verb == "/set_alias":
-								# TODO: set_alias also needs to update those ones in the owner list, blocked list etc.
-								self.server_info.set_alias(d, s)
+								response = self.server_info.set_alias(d, s)
 							elif verb == "/join":
-								self.server_info.join(d, s)
+								response = self.server_info.join(d)
 							elif verb == "/create":
-								self.server_info.create(d, s)
+								response = self.server_info.create(d)
 							elif verb == "/block":
-								self.server_info.block(d, s)
+								response = self.server_info.block(d)
 							elif verb == "/unblock":
-								self.server_info.unblock(d, s)
+								response = self.server_info.unblock(d)
 							elif verb == "/delete":
-								self.server_info.delete(d, s)
+								response = self.server_info.delete(d)
 							elif verb == "/lsroom":
-								self.server_info.lsroom(d, s)
+								response = self.server_info.lsroom(d)
 							elif verb == "/lsusr":
-								self.server_info.lsusr(d, s)
+								response = self.server_info.lsusr(d)
+
+							self.send(response, s)
+
+							if response["success"] == "true":
+								self.notify(response)
 
 							if self.log_flag: self.server_logging()
 
@@ -104,6 +110,40 @@ class Server:
 			for s in self.connections: s.close()
 			logging.info("Shutdown the server...")
 			sys.exit(0)
+
+	def notify(self, d):
+		"""
+		notify the associated clients with the actions
+
+		:param d: the data dictionary
+		:return:
+		"""
+		verb = d["verb"]
+		if verb in ["/join", "/create", "/block", "/unblock", "/delete"]:
+			self.send(*self.server_info.notify_usr(d))
+
+
+	def send(self, d, s):
+		"""
+		send dictionary the to target socket or a list of sockets
+
+		:param d:
+		:param s:
+		:return:
+		"""
+
+		data = bytes(json.dumps(d), "utf-8")
+
+		try:
+			for sock in s:
+				self.__send(data, sock)
+
+		except TypeError:
+			self.__send(data, s)
+
+	@staticmethod
+	def __send(d, s):
+		s.send(d)
 
 
 if __name__ == "__main__":

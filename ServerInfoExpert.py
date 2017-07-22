@@ -1,170 +1,152 @@
-import json
-
 class ServerInfoExpert:
 
 	def __init__(self):
 
-		self._general_chatroom = "general"
+		self.__general_chatroom = "general"
 
-		self._sock_to_alias = {}  # {socket:alias}
-		self._alias_to_sock = {}  # {alias:[socket, current_room]}
-		self._room_to_alias = {self._general_chatroom: set()}  # {room:<alias>}
+		self.__sock_to_alias = {}  # {socket:alias}
+		self.__alias_to_sock = {}  # {alias:[socket, current_room]}
+		self.__room_to_alias = {self.__general_chatroom: set()}  # {room:<alias>}
 
-		# integer 1 is the creator of the chatroom. because the user alias must be a string, the user alias can never equal to 1 since they are different type
-		self._owner_to_room = {1: self._general_chatroom}
-		self._room_to_owner = {self._general_chatroom: 1}  # {room: owner_alias}
-		self._room_blk_list = {self._general_chatroom: set()}  # {room:<blocked_alias>}
+		# integer 1 is the creator of the chatroom. because the user alias must be a string,
+		# the user alias can never equal to 1 since they are different type
+		self.__owner_to_room = {1: self.__general_chatroom}
+		self.__room_to_owner = {self.__general_chatroom: 1}  # {room: owner_alias}
+		self.__room_blk_list = {self.__general_chatroom: set()}  # {room:<blocked_alias>}
 
 
 	def getter(self):
-		'''
+		"""
 		a getter that returns private fields
 
 		:return: all the private dictionaries
-		'''
+		"""
 
-		return self._sock_to_alias, self._alias_to_sock, self._room_to_alias, self._owner_to_room, \
-				self._room_to_owner, self._room_blk_list
+		return self.__sock_to_alias, self.__alias_to_sock, self.__room_to_alias, self.__owner_to_room, \
+				self.__room_to_owner, self.__room_blk_list
 
 
-	def remove_client(self, socket):
-		'''
+	def remove_client(self, sock):
+		"""
 		wrapper to _remove_client
 
-		:param socket: the client socket to be removed
+		:param sock: the target socket
 		:return:
-		'''
+		"""
 
-		self._remove_client(socket)
+		self.__remove_client(sock)
 
-	def _remove_client(self, socket):
-		'''
+	def __remove_client(self, socket):
+		"""
 		remove the socket, and its associated information from the server
 
 		:param socket: the client socket to be removed
 		:return:
-		'''
+		"""
 
-		alias = self._sock_to_alias[socket]
-		room = self._alias_to_sock[alias][1]
-		del self._sock_to_alias[socket]
-		del self._alias_to_sock[alias]
-		self._room_to_alias[room].remove(alias)
-
-
-	def send(self, d, s):
-		'''
-		wrapper to _send
-
-		:param d: the data dictionary to be sent
-		:param s: the target socket
-		:return:
-		'''
-
-		self._send(d, s)
-
-	def _send(self, d, s):
-		'''
-		send the data dictionary to the target socket
-
-		:param d: the data dictionary to be sent
-		:param s: the target socket
-		:return:
-		'''
-
-		data = json.dumps(d)
-		s.send(bytes(data, "utf-8"))
+		alias = self.__sock_to_alias[socket]
+		room = self.__alias_to_sock[alias][1]
+		del self.__sock_to_alias[socket]
+		del self.__alias_to_sock[alias]
+		self.__room_to_alias[room].remove(alias)
 
 
 	def broadcast(self, d):
-		'''
+		"""
 		wrapper to _broadcast
 
 		:param d: the data dictionary to be broadcast
 		:return:
-		'''
+		"""
 
-		self._broadcast(d)
+		return self.__broadcast(d)
 
-	def _broadcast(self, d):
-		'''
+	def __broadcast(self, d):
+		"""
 		broadcast to other clients in the chatroom
 
 		:param d: the dictionary with /say verb
-		:return:
-		'''
+		:return: a list of sockets to be broadcast to
+		"""
 
 		sender = d["usr"]
-		sender_room = self._alias_to_sock[sender][1]
+		sender_room = self.__alias_to_sock[sender][1]
 
-		for a in self._alias_to_sock:
-			sock, room = self._alias_to_sock[a]
-			if a != sender:
-				if sender_room == room:
-					self._send(d, sock)
+		tmp = []
 
+		try:
+			for a in self.__alias_to_sock:
+				sock, room = self.__alias_to_sock[a]
+				if a != sender:
+					if sender_room == room:
+						tmp.append(sock)
+
+			d["success"] = "true"
+		except:
+			d["success"] = "false"
+
+		return d, tmp
 
 	def set_alias(self, d, s):
-		'''
+		"""
 		wrapper to _set_alias
 
 		:param d: the data dictionary with /set_alias verb
 		:param s: the target socket
 		:return:
-		'''
+		"""
 
-		self._set_alias(d, s)
+		return self.__set_alias(d, s)
 
 	# /set_alias
-	def _set_alias(self, d, s):
-		'''
+	def __set_alias(self, d, s):
+		"""
 		set the alias the the client
 
 		:param d: the data dictionary with /set_alias verb
-		:param s: the target socket
-		:return:
-		'''
+		:return: the updated dictionary
+		"""
 
 		new_alias = d["body"]
 
-		if new_alias not in self._alias_to_sock:
+		if new_alias not in self.__alias_to_sock:
 
-			self._sock_to_alias[s] = new_alias
+			self.__sock_to_alias[s] = new_alias
 			# first time set the alias, room = "general"
 			if "usr" not in d:
-				self._alias_to_sock[new_alias] = [s, self._general_chatroom]
-				self._room_to_alias[self._general_chatroom].add(new_alias)
+				self.__alias_to_sock[new_alias] = [s, self.__general_chatroom]
+				self.__room_to_alias[self.__general_chatroom].add(new_alias)
 			# reset current alias
 			else:
 				old_alias = d["usr"]
 
-				current_room = self._alias_to_sock[old_alias][1]
+				current_room = self.__alias_to_sock[old_alias][1]
 
-				self._alias_to_sock[new_alias] = [s, current_room]
-				del self._alias_to_sock[old_alias]
-				self._sock_to_alias[s] = new_alias
+				self.__alias_to_sock[new_alias] = [s, current_room]
+				del self.__alias_to_sock[old_alias]
+				self.__sock_to_alias[s] = new_alias
 
 				## update room_to_alias
-				self._room_to_alias[current_room].remove(old_alias)
-				self._room_to_alias[current_room].add(new_alias)
+				self.__room_to_alias[current_room].remove(old_alias)
+				self.__room_to_alias[current_room].add(new_alias)
 
 				try:
 					## update owner_to_room
-					room = self._owner_to_room[old_alias]
-					del self._owner_to_room[old_alias]
-					self._owner_to_room[new_alias] = room
+					room = self.__owner_to_room[old_alias]
+					del self.__owner_to_room[old_alias]
+					self.__owner_to_room[new_alias] = room
 
 					## update room_to_owner
-					self._room_to_owner[room] = new_alias
+					self.__room_to_owner[room] = new_alias
 				except KeyError:
 					pass
 
 				## update room_blk_list
 				## O(n), not optimized becoz no reversed dictionary look up
-				for room in self._room_blk_list:
-					if old_alias in self._room_blk_list[room]:
-						self._room_blk_list[room].remove(old_alias)
-						self._room_blk_list[room].add(new_alias)
+				for room in self.__room_blk_list:
+					if old_alias in self.__room_blk_list[room]:
+						self.__room_blk_list[room].remove(old_alias)
+						self.__room_blk_list[room].add(new_alias)
 
 			d["success"] = "true"
 
@@ -172,291 +154,320 @@ class ServerInfoExpert:
 			d["success"] = "false"
 			d["reason"] = "The alias has been used!"
 
-		# return the request to the client
-		self._send(d, s)
+		return d
 
 
-	def join(self, d, s):
-		'''
+	def join(self, d):
+		"""
 		wrapper to _join
 
 		:param d: the data dictionary
-		:param s: the target socket
 		:return:
-		'''
+		"""
 
-		self._join(d, s)
+		return self.__join(d)
 
 	# /join
-	def _join(self, d, s):
-		'''
+	def __join(self, d):
+		"""
 		join a user to the target chatroom
 
 		:param d: the the data dictionary
-		:param s: the sender socket
-		:return: void
-		'''
+		:return: the updated dictionary
+		"""
 
-		roomname = d["body"]
-		usrName = d["usr"]
+		tgt_room = d["body"]
+		alias = d["usr"]
 
 		## the two following condition are mutually exclusive.
 		## if a room DNE, then no user can be blocked from that room.
-		if roomname not in self._room_to_owner:
+		if tgt_room not in self.__room_to_owner:
 			d["success"] = "false"
 			d["reason"] = "The room does not exist!"
 
-		elif usrName in self._room_blk_list[roomname]:
+		elif alias in self.__room_blk_list[tgt_room]:
 			d["success"] = "false"
 			d["reason"] = "You are blocked!"
 
 		else:
-				prevInfo = self._alias_to_sock[usrName]
-				prevRoom = prevInfo[1]
-				self._move(usrName, prevRoom, roomname)
+				curr_room = self.__alias_to_sock[alias][1]
+				self.__move(alias, curr_room, tgt_room)
 				d["success"] = "true"
 
-		self._send(d, s)
+		return d
 
 
-	def _move(self, usr, old_room, new_room):
-		'''
+	def __move(self, usr, old_room, new_room):
+		"""
 		move a user from the old room to the new room
-		this method is to be called with the class therefore no wrapper
+		this method is to be called within the class therefore no wrapper
 
 		:param usr: the user alias
 		:param old_room: the current chatroom
 		:param new_room: the chatroom to join
 		:return: void
-		'''
+		"""
 
 		if old_room == new_room:
 			return
 
-		soc = self._alias_to_sock[usr][0]
-		self._room_to_alias[new_room].add(usr)  # adds the usr to its new desired room
+		soc = self.__alias_to_sock[usr][0]
+		self.__room_to_alias[new_room].add(usr)  # adds the usr to its new desired room
 		try:
-			self._room_to_alias[old_room].remove(usr)  # remove the usr from its previous room
+			self.__room_to_alias[old_room].remove(usr)  # remove the usr from its previous room
 		except KeyError:
 			pass
-		self._alias_to_sock[usr] = [soc, new_room]  # update usr room info
+		self.__alias_to_sock[usr] = [soc, new_room]  # update usr room info
 
 
-	def create(self, d, s):
-		'''
+	def create(self, d):
+		"""
 		wrapper to _create
 
 		:param d: the data dictionary
-		:param s: the target socket
 		:return:
-		'''
+		"""
 
-		self._create(d, s)
+		return self.__create(d)
 
 	# /create
-	def _create(self, d, s):
-		'''
+	def __create(self, d):
+		"""
 		create a new chatroom
 
 		:param d: the data dictionary
-		:param s: socket of the sender
-		:return: void
-		'''
+		:return: the updated dictionary
+		"""
 
-		roomName = d["body"]
-		ownerName = d["usr"]
+		new_room = d["body"]
+		alias = d["usr"]
 
-		if roomName in self._room_to_owner or ownerName in self._owner_to_room:
+		if new_room in self.__room_to_owner or alias in self.__owner_to_room:
 			d["success"] = "false"
 
 		else:
-			self._room_to_owner[roomName] = ownerName
-			self._owner_to_room[ownerName] = roomName
+			self.__room_to_owner[new_room] = alias
+			self.__owner_to_room[alias] = new_room
 			# self.client_to_alias = {} # {socket:alias} maps socket to usr alias
 			# self.alias_to_client = {} # {alias:[socket, current_room]} map alias to room number and socket
-			self._room_to_alias[roomName] = set()  # {room:<alias>}    set() = all users in the room  room# = 0
+			self.__room_to_alias[new_room] = set()  # {room:<alias>}    set() = all users in the room  room# = 0
 
-			self._room_blk_list[roomName] = set()  # {room:<blocked_alias>}
+			self.__room_blk_list[new_room] = set()  # {room:<blocked_alias>}
 
 			d["success"] = "true"
 
-		self._send(d, s)
+		return d
 
 
-	def block(self, d, s):
-		'''
+	def block(self, d):
+		"""
 		the wrapper to _block
 
 		:param d: the data dictionary
-		:param s: the target socket
 		:return:
-		'''
+		"""
 
-		self._block(d, s)
+		return self.__block(d)
 
 	# /block
-	def _block(self, d, s):
-		'''
+	def __block(self, d):
+		"""
 		block a user from a chatroom, and the user will be moved to the general chatroom
 
 		:param d: the data dictionary
-		:param s: sender socket
-		:return: void
-		'''
+		:return: the updated dictionary
+		"""
 
-		usrName = d["body"]
-		ownerName = d["usr"]
+		tgt_alias = d["body"]
+		alias = d["usr"]
 
 		## if the user is not any room owners, or the blocked user alias DNE, then false
-		if ownerName not in self._owner_to_room or usrName not in self._alias_to_sock:
+		if alias not in self.__owner_to_room or tgt_alias not in self.__alias_to_sock:
 			d["success"] = "false"
 
 		else:
-			#ivd = {v: k for k, v in self._room_to_owner.items()}
-			roomName = self._owner_to_room[ownerName]
-			self._room_blk_list[roomName].add(usrName)
-			self._move(usrName, roomName, "general")
+			room = self.__owner_to_room[alias]
+			self.__room_blk_list[room].add(tgt_alias)
+			self.__move(tgt_alias, room, "general")
 			d["success"] = "true"
 
-		self._send(d, s)
+		return d
 
 
-	def unblock(self, d, s):
-		'''
+	def unblock(self, d):
+		"""
 		the wrapper to _unblock
 
 		:param d: the data dictionary
-		:param s: the target socket
 		:return:
-		'''
+		"""
 
-		self._unblock(d, s)
+		return self.__unblock(d)
 
 	# /unblock
-	def _unblock(self, d, s):
-		'''
+	def __unblock(self, d):
+		"""
 		unblock a user from the chatroom
 
 		:param d: the the data dictionary
-		:param s: the sender socket
-		:return:
-		'''
+		:return: the updated dictionary
+		"""
 
-		usrName = d["body"]
-		ownerName = d["usr"]
+		tgt_alias = d["body"]
+		alias = d["usr"]
 
-		if ownerName not in self._owner_to_room or usrName not in self._alias_to_sock:
+		if alias not in self.__owner_to_room or tgt_alias not in self.__alias_to_sock:
 			d["success"] = "false"
 
 		else:
-			roomName = self._owner_to_room[ownerName]
-			if usrName in self._room_blk_list[roomName]:  # if not in list will result in seg fault
-				self._room_blk_list[roomName].remove(usrName)
+			room = self.__owner_to_room[alias]
+			if tgt_alias in self.__room_blk_list[room]:  # if not in list will result in seg fault
+				self.__room_blk_list[room].remove(tgt_alias)
 				d["success"] = "true"
 
-		self._send(d, s)
+		return d
 
 
-	def delete(self, d, s):
-		'''
+	def delete(self, d):
+		"""
 		wrapper to _Delete
 
 		:param d: the data dictionary
-		:param s: the target socket
 		:return:
-		'''
+		"""
 
-		self._delete(d, s)
+		return self.__delete(d)
 
 	# /delete
-	def _delete(self, d, s):
-		'''
+	def __delete(self, d):
+		"""
 		a user tries to delete a chatroom
 
 		:param d: the data dictionary
-		:param s: sender socket
-		:return: void
-		'''
+		:return: the updated dictionary
+		"""
 
-		ownerName = d["usr"]
+		alias = d["usr"]
 
-		if ownerName not in self._owner_to_room:
+		if alias not in self.__owner_to_room:
 			d["success"] = "false"
 
 		else:
-			#ivd = {v: k for k, v in self._owner_to_room.items()}
-			roomName = self._owner_to_room[ownerName]
-			clientList = self._room_to_alias[roomName]  # grab all clients in that room
+			#ivd = {v: k for k, v in self.__owner_to_room.items()}
+			room = self.__owner_to_room[alias]
+			alive_clients = self.__room_to_alias[room]  # grab all clients in that room
 
 			##
-			while len(clientList) > 0:
-				client = clientList.pop()
-				self._move(client, roomName, "general")
+			while len(alive_clients) > 0:
+				client = alive_clients.pop()
+				self.__move(client, room, "general")
 
-			del self._room_to_alias[roomName]  # remove the room
-			del self._room_blk_list[roomName]
-			del self._owner_to_room[ownerName]
-			del self._room_to_owner[roomName]
+			del self.__room_to_alias[room]  # remove the room
+			del self.__room_blk_list[room]
+			del self.__owner_to_room[alias]
+			del self.__room_to_owner[room]
 
 			d["success"] = "true"
 
-		self._send(d, s)
+		return d
 
 
-	def lsroom(self, d, s):
-		'''
+	def lsroom(self, d):
+		"""
 		wrapper to _lsroom
 
 		:param d: the data dictionary
-		:param s: the target socket
 		:return:
-		'''
+		"""
 
-		self._lsroom(d, s)
+		return self.__lsroom(d)
 
 	# /lsroom
-	def _lsroom(self, d, s):
-		'''
+	def __lsroom(self, d):
+		"""
 		list all chatrooms on the server
 
 		:param d: the the data dictionary
-		:param s: the sender socket
-		:return: void
-		'''
+		:return: the updated dictionary
+		"""
 
 		try:
-			d["rooms"] = list(self._room_to_alias.keys())
+			d["rooms"] = list(self.__room_to_alias.keys())
 			d["success"] = "true"
 		except:
 			d["success"] = "false"
 
-		self._send(d, s)
+		return d
 
 
-	def lsusr(self, d, s):
-		'''
+	def lsusr(self, d):
+		"""
 		wrapper to _lsusr
 
 		:param d: the data dictionary
-		:param s: the target socket
 		:return:
-		'''
-		self._lsusr(d, s)
+		"""
+		return self.__lsusr(d)
 
 	# /lsusr
-	def _lsusr(self, d, s):
-		'''
+	def __lsusr(self, d):
+		"""
 		list all users and the rooms they are in
 
 		:param d: the the data dictionary
-		:param s: the sender socket
-		:return: void
-		'''
+		:return: the updated dictionary
+		"""
 
 		try:
-			d["live_users"] = [ (a, v[1]) for a, v in self._alias_to_sock.items() ]
+			d["live_users"] = [ (a, v[1]) for a, v in self.__alias_to_sock.items() ]
 			d["success"] = "true"
 		except:
 			d["success"] = "false"
 
-		self._send(d, s)
+		return d
+
+
+	def notify_usr(self, d):
+		"""
+		wrapper to __notify_usr
+
+		:param d: the data dictionary
+		:return: the dictionary to be sent, and the target socket
+		"""
+
+		return self.__notify_usr(d)
+
+	def __notify_usr(self, d):
+		"""
+		notify the users of the action
+
+		:param d: the data dictionary
+		:return: the dictionary to be sent, and the target socket
+		"""
+
+		verb = d["verb"]
+
+		if verb == "/create":
+			new_response = {"usr":"Server", "verb":"/say", "body":"[{}] has created [{}]".format(d["usr"], d["body"])}
+			tgt = [s for s, a in self.__sock_to_alias.items() if a != d["usr"]]
+		elif verb == "/join":
+			new_response = {"usr": "Server", "verb": "/say", "body": "[{}] has joined [{}]".format(d["usr"], d["body"])}
+			tgt = [self.__alias_to_sock[alias][0] for alias in self.__room_to_alias[d["body"]] if alias != d["usr"]]
+		elif verb == "/block":
+			new_response = {"usr": "Server", "verb": "/say",
+							"body": "You are blocked by [{}] from [{}]".format(d["usr"], self.__owner_to_room[d["usr"]])}
+			tgt = self.__alias_to_sock[d["body"]][0]
+		elif verb == "/unblock":
+			new_response = {"usr": "Server", "verb": "/say",
+							"body": "You are unblocked by [{}] from [{}]".format(d["usr"], self.__owner_to_room[
+								d["usr"]])}
+			tgt = self.__alias_to_sock[d["body"]][0]
+		elif verb == "/delete":
+			new_response = {"usr": "Server", "verb": "/say",
+							"body": "room [{}] was deleted by [{}]".format(d["body"], d["usr"])}
+			tgt = [s for s, a in self.__sock_to_alias.items() if a != d["usr"]]
+		else:
+			## for expansion
+			response, tgt = "", {}
+
+		return new_response, tgt
