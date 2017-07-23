@@ -2,8 +2,5 @@
 *.pdf
 *.graphml
 *.png
-aiosimplechat-master/
 .idea/
 __pycache__/
-asyncio_*
-socket_*
