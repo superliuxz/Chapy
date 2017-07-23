@@ -9,7 +9,7 @@ TODOs:
 
   * <del>need to fix the crash on python 3.5.2 & 3.3.2</del>
   * <del>stuff commented in the code</del>
-  * handle client disconnection when the user is promoted to enter the alias for the first time
+  * <del>handle client disconnection when the user is promoted to enter the alias for the first time</del>
   * try:
     * `asyncio`
     * `multithreading` 
