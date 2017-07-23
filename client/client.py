@@ -39,24 +39,30 @@ class Client:
 		"""
 
 		while not self.alias:
-			print("Please enter your alias:")
+			try:
+				print("Please enter your alias:")
 
-			alias = sys.stdin.readline().strip()
-			if alias == "":
-				continue
-			elif alias == "server" or alias == "Server":
-				print("[S|s]erver is reserved!")
+				alias = sys.stdin.readline().strip()
+				if alias == "":
+					continue
+				elif alias == "server" or alias == "Server":
+					print("[S|s]erver is reserved!")
 
-			## send initial message to set alias
-			self.__send_to_server({"verb": "/set_alias", "body": alias})
+				## send initial message to set alias
+				self.__send_to_server({"verb": "/set_alias", "body": alias})
 
-			## server returns the status of the request
-			response = json.loads(self.s.recv(4096).decode("utf-8"))
+				## server returns the status of the request
+				response = json.loads(self.s.recv(4096).decode("utf-8"))
 
-			if response["success"] == "true":
-				return alias
-			else:
-				print("The alias has been used!")
+				if response["success"] == "true":
+					return alias
+				else:
+					print("The alias has been used!")
+
+			except KeyboardInterrupt:
+				# Ctrl-C to quit
+				self.s.close()
+				sys.exit(0)
 
 
 	@staticmethod

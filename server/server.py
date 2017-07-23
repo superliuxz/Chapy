@@ -107,9 +107,16 @@ class Server:
 						# client Ctrl-C
 						else:
 							logging.info("{} has logged off.\n".format(s.getpeername()))
-							self.server_info.remove_client(s)
-							self.connections.remove(s)
-							s.close()
+
+							try:
+								self.server_info.remove_client(s)
+
+							except KeyError:
+								pass
+
+							finally:
+								self.connections.remove(s)
+								s.close()
 
 		except KeyboardInterrupt:
 			# Ctrl-C to quit
