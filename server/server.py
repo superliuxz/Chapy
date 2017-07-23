@@ -1,5 +1,11 @@
-import socket, sys, json, select, logging
-from ServerInfoExpert import ServerInfoExpert
+import json
+import logging
+import select
+import socket
+import sys
+
+from server.ServerInfoExpert import ServerInfoExpert
+
 
 class Server:
 	def __init__(self, host = socket.gethostname(), port = 8888, log = True):

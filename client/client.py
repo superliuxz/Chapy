@@ -1,5 +1,11 @@
-import socket, sys, json, select, logging
-from parser import Parser
+import json
+import logging
+import select
+import socket
+import sys
+
+from client.parser import Parser
+
 
 class Client:
 
