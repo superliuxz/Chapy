@@ -1,5 +1,9 @@
-# seng299
-SENG299 Project Repo
+# Python Chat Program
+SENG299 poject repo for the client-server chat program written in Python3, using `socket` and `select`.
+
+Dependencies: `pip3 install -r requirements.txt` 
+
+Usage: `python3 start_server.py` and `python3 client.py`. After entering the alias from the client terminal, do `/help` to list all the supported commands.
 
 TODOs:
 
