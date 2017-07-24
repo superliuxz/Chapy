@@ -5,6 +5,7 @@ import socket
 import sys
 
 from pkg.server.ServerInfoExpert import ServerInfoExpert
+from ..CommunicationHandler.CommunicationHandler import ServerCommunicationHandler
 
 
 class Server:
@@ -22,14 +23,16 @@ class Server:
 
 		self.server_info = ServerInfoExpert()
 
-		self.s = socket.socket()
-		self.s.setblocking(False)
-		## https://stackoverflow.com/questions/29217502/socket-error-address-already-in-use
-		self.s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-		self.s.bind((host, port))
-		self.s.listen(5)
+		# self.s = socket.socket()
+		# self.s.setblocking(False)
+		# ## https://stackoverflow.com/questions/29217502/socket-error-address-already-in-use
+		# self.s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+		# self.s.bind((host, port))
+		# self.s.listen(5)
+		#
+		# self.connections = [self.s]
 
-		self.connections = [self.s]
+		self.comm_hdl = ServerCommunicationHandler(host, port)
 
 		logging.info("Sever has started!\n")
 
@@ -54,24 +57,30 @@ class Server:
 		try:
 			while True:
 
-				rlist, wlist, xlist = select.select(self.connections, [], [])
+				#rlist, wlist, xlist = select.select(self.connections, [], [])
+
+				rlist, wlist, xlist = self.comm_hdl.get_response()
 
 				for s in rlist:
 
 					## new client connection
-					if s == self.s:
-						sock, *_ = self.s.accept()
-						logging.info("{} has connected!\n".format(sock.getpeername()))
-						self.connections.append(sock)
+					#if s == self.s:
+					if s == self.comm_hdl.get_self_sock():
+						#sock, *_ = self.s.accept()
+						_ = self.comm_hdl.accept_new_conn()
+						#logging.info("{} has connected!\n".format(sock.getpeername()))
+						logging.info("{} has connected!\n".format(_))
+						#self.connections.append(sock)
 
 					## clients inbound traffic
 					else:
 						# TODO: need to make sure the client does not send a json longer than 4096!
-						data = s.recv(4096).decode("utf-8")
-						if self.log_flag: logging.info("DEBUG - received data: " + data)
+						#data = s.recv(4096).decode("utf-8")
+						d = self.comm_hdl.receive(s)
+						if self.log_flag: logging.info("DEBUG - received data: " + repr(d))
 						## if the client calls socket.close(), the server will receive a empty string
 						if data:
-							d = json.loads(data, encoding = "utf-8")
+							#d = json.loads(data, encoding = "utf-8")
 
 							## according to the verb, respond accordingly
 							verb = d["verb"]
@@ -98,7 +107,7 @@ class Server:
 								response = self.server_info.lsusr(d)
 
 							## server returns the response back to the sender
-							self.send(response, s)
+							self.comm_hdl.send(response, s)
 
 							## if the response is successful, then notify the associated users
 							if response["success"] == "true":
@@ -118,12 +127,15 @@ class Server:
 								pass
 
 							finally:
-								self.connections.remove(s)
-								s.close()
+								#self.connections.remove(s)
+								self.comm_hdl.remove_sock(s)
+								#s.close()
+								self.comm_hdl.close(s)
 
 		except KeyboardInterrupt:
 			# Ctrl-C to quit
-			for s in self.connections: s.close()
+			#for s in self.connections: s.close()
+			self.comm_hdl.close_all()
 			logging.info("Shutdown the server...")
 			sys.exit(0)
 
@@ -136,30 +148,30 @@ class Server:
 		"""
 		verb = d["verb"]
 		if verb in ["/join", "/create", "/block", "/unblock", "/delete"]:
-			self.send(*self.server_info.notify_usr(d))
+			self.comm_hdl.send(*self.server_info.notify_usr(d))
 
 
-	def send(self, d, s):
-		"""
-		send dictionary the to target socket or a list of sockets
-
-		:param d:
-		:param s:
-		:return:
-		"""
-
-		data = bytes(json.dumps(d), "utf-8")
-
-		try:
-			for sock in s:
-				self.__send(data, sock)
-
-		except TypeError:
-			self.__send(data, s)
-
-	@staticmethod
-	def __send(d, s):
-		s.send(d)
+	# def send(self, d, s):
+	# 	"""
+	# 	send dictionary the to target socket or a list of sockets
+	#
+	# 	:param d:
+	# 	:param s:
+	# 	:return:
+	# 	"""
+	#
+	# 	data = bytes(json.dumps(d), "utf-8")
+	#
+	# 	try:
+	# 		for sock in s:
+	# 			self.__send(data, sock)
+	#
+	# 	except TypeError:
+	# 		self.__send(data, s)
+	#
+	# @staticmethod
+	# def __send(d, s):
+	# 	s.send(d)
 
 
 if __name__ == "__main__":

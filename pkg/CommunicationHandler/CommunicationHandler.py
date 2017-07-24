@@ -9,29 +9,19 @@ class CommunicationHandler:
 		self.sock = socket.socket()
 		self.sel_list = [self.sock]
 
-	def getter(self):
+	def get_self_sock(self):
 		return self.sock
 
 	def send(self, dictionary):
-		return self.__send(dictionary)
-
-	def __send(self, dictionary):
 		data = bytes(json.dumps(dictionary), "utf-8")
 		self.sock.send(data)
 
-
 	def receive(self):
-		return self.__recv()
-
-	def __recv(self):
 		data = self.sock.recv(4096)
 
 		return "" if not data else json.loads(data, encoding="utf-8")
 
 	def close(self):
-		self.__close()
-
-	def __close(self):
 		self.sock.close()
 
 	def get_response(self):
@@ -49,7 +39,7 @@ class ServerCommunicationHandler(CommunicationHandler):
 		self.sock.listen(5)
 
 	@staticmethod
-	def __send(dictionary, s):
+	def send(dictionary, s):
 		'''
 		overrides the method in base class
 
@@ -67,10 +57,18 @@ class ServerCommunicationHandler(CommunicationHandler):
 			s.send(data)
 
 	@staticmethod
-	def __recv(s):
+	def receive(s):
 		data = s.recv(4096)
 
 		return "" if not data else json.loads(data, encoding="utf-8")
+
+	@staticmethod
+	def close(s):
+		s.close()
+
+	def close_all(self):
+		for sock in self.sel_list:
+			sock.close()
 
 	def add_sock(self, sock):
 		self.sel_list.append(sock)
@@ -79,7 +77,12 @@ class ServerCommunicationHandler(CommunicationHandler):
 		self.sel_list.remove(sock)
 
 	def accept_new_conn(self):
-		return self.sock.accept()
+		sock, addr = self.sock.accept()
+
+		self.add_sock(sock)
+
+		return sock.getpeername()
+
 
 
 class ClientCommunicationHandler(CommunicationHandler):

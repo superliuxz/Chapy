@@ -114,7 +114,7 @@ class Client:
 
 				for s in rlist:
 					## from the server
-					if s == self.comm_hdl.getter():
+					if s == self.comm_hdl.get_self_sock():
 						#data = s.recv(4096).decode("utf-8")
 						data = self.comm_hdl.receive()
 
