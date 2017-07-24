@@ -207,12 +207,3 @@ class ClientCommunicationHandler(CommunicationHandler):
 		except ConnectionRefusedError or socket.gaierror:
 			print('Unable to connect {}@{}'.format(host, port))
 			sys.exit(1)
-
-
-## some tests
-if __name__ == "__main__":
-	c1 = ServerCommunicationHandler("localhost", 8888)
-	c2 = ClientCommunicationHandler("localhost", 8888)
-
-	print(c1.sel_list)
-	print(c2.sel_list)

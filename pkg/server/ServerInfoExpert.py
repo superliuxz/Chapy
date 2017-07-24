@@ -8,8 +8,8 @@ class ServerInfoExpert:
 		self.__alias_to_sock = {}  # {alias:[socket, current_room]}
 		self.__room_to_alias = {self.__general_chatroom: set()}  # {room:<alias>}
 
-		# integer 1 is the creator of the chatroom. because the user alias must be a string,
-		# the user alias can never equal to 1 since they are different type
+		## integer 1 is the creator of the chatroom. because the user alias must be a string,
+		## the user alias can never equal to 1 since they are different type
 		self.__owner_to_room = {1: self.__general_chatroom}
 		self.__room_to_owner = {self.__general_chatroom: 1}  # {room: owner_alias}
 		self.__room_blk_list = {self.__general_chatroom: set()}  # {room:<blocked_alias>}
@@ -98,7 +98,7 @@ class ServerInfoExpert:
 
 		return self.__set_alias(d, s)
 
-	# /set_alias
+	## /set_alias
 	def __set_alias(self, d, s):
 		"""
 		set the alias the the client
@@ -112,11 +112,11 @@ class ServerInfoExpert:
 		if new_alias not in self.__alias_to_sock:
 
 			self.__sock_to_alias[s] = new_alias
-			# first time set the alias, room = "general"
+			## first time set the alias, room = "general"
 			if "usr" not in d:
 				self.__alias_to_sock[new_alias] = [s, self.__general_chatroom]
 				self.__room_to_alias[self.__general_chatroom].add(new_alias)
-			# reset current alias
+			## reset current alias
 			else:
 				old_alias = d["usr"]
 
@@ -167,7 +167,7 @@ class ServerInfoExpert:
 
 		return self.__join(d)
 
-	# /join
+	## /join
 	def __join(self, d):
 		"""
 		join a user to the target chatroom
@@ -212,12 +212,12 @@ class ServerInfoExpert:
 			return
 
 		soc = self.__alias_to_sock[usr][0]
-		self.__room_to_alias[new_room].add(usr)  # adds the usr to its new desired room
+		self.__room_to_alias[new_room].add(usr)
 		try:
-			self.__room_to_alias[old_room].remove(usr)  # remove the usr from its previous room
+			self.__room_to_alias[old_room].remove(usr)
 		except KeyError:
 			pass
-		self.__alias_to_sock[usr] = [soc, new_room]  # update usr room info
+		self.__alias_to_sock[usr] = [soc, new_room]
 
 
 	def create(self, d):
@@ -230,7 +230,7 @@ class ServerInfoExpert:
 
 		return self.__create(d)
 
-	# /create
+	## /create
 	def __create(self, d):
 		"""
 		create a new chatroom
@@ -248,11 +248,10 @@ class ServerInfoExpert:
 		else:
 			self.__room_to_owner[new_room] = alias
 			self.__owner_to_room[alias] = new_room
-			# self.client_to_alias = {} # {socket:alias} maps socket to usr alias
-			# self.alias_to_client = {} # {alias:[socket, current_room]} map alias to room number and socket
-			self.__room_to_alias[new_room] = set()  # {room:<alias>}    set() = all users in the room  room# = 0
 
-			self.__room_blk_list[new_room] = set()  # {room:<blocked_alias>}
+			self.__room_to_alias[new_room] = set()
+
+			self.__room_blk_list[new_room] = set()
 
 			d["success"] = "true"
 
@@ -269,7 +268,7 @@ class ServerInfoExpert:
 
 		return self.__block(d)
 
-	# /block
+	## /block
 	def __block(self, d):
 		"""
 		block a user from a chatroom, and the user will be moved to the general chatroom
@@ -304,7 +303,7 @@ class ServerInfoExpert:
 
 		return self.__unblock(d)
 
-	# /unblock
+	## /unblock
 	def __unblock(self, d):
 		"""
 		unblock a user from the chatroom
@@ -321,7 +320,7 @@ class ServerInfoExpert:
 
 		else:
 			room = self.__owner_to_room[alias]
-			if tgt_alias in self.__room_blk_list[room]:  # if not in list will result in seg fault
+			if tgt_alias in self.__room_blk_list[room]:
 				self.__room_blk_list[room].remove(tgt_alias)
 				d["success"] = "true"
 
@@ -338,7 +337,7 @@ class ServerInfoExpert:
 
 		return self.__delete(d)
 
-	# /delete
+	## /delete
 	def __delete(self, d):
 		"""
 		a user tries to delete a chatroom
@@ -353,16 +352,15 @@ class ServerInfoExpert:
 			d["success"] = "false"
 
 		else:
-			#ivd = {v: k for k, v in self.__owner_to_room.items()}
 			room = self.__owner_to_room[alias]
-			alive_clients = self.__room_to_alias[room]  # grab all clients in that room
+			alive_clients = self.__room_to_alias[room]
 
 			##
 			while len(alive_clients) > 0:
 				client = alive_clients.pop()
 				self.__move(client, room, "general")
 
-			del self.__room_to_alias[room]  # remove the room
+			del self.__room_to_alias[room]
 			del self.__room_blk_list[room]
 			del self.__owner_to_room[alias]
 			del self.__room_to_owner[room]
@@ -382,7 +380,7 @@ class ServerInfoExpert:
 
 		return self.__lsroom(d)
 
-	# /lsroom
+	## /lsroom
 	def __lsroom(self, d):
 		"""
 		list all chatrooms on the server
@@ -409,7 +407,7 @@ class ServerInfoExpert:
 		"""
 		return self.__lsusr(d)
 
-	# /lsusr
+	## /lsusr
 	def __lsusr(self, d):
 		"""
 		list all users and the rooms they are in

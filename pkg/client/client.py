@@ -1,10 +1,8 @@
 import json
 import logging
-import select
 import socket
 import sys
 from ..CommunicationHandler.CommunicationHandler import ClientCommunicationHandler
-
 from pkg.client.parser import Parser
 
 
@@ -18,16 +16,6 @@ class Client:
 		self.parser = Parser()
 
 		self.alias = None
-
-		# self.s = socket.socket()
-		#
-		# self.input_list = [sys.stdin, self.s]
-		#
-		# try:
-		# 	self.s.connect((host, port))
-		# except:
-		# 	print('Unable to connect {}@{}'.format(host, port))
-		# 	sys.exit(1)
 
 		self.comm_hdl = ClientCommunicationHandler(host, port)
 
@@ -53,11 +41,9 @@ class Client:
 					continue
 
 				## send initial message to set alias
-				#self.__send_to_server({"verb": "/set_alias", "body": alias})
 				self.comm_hdl.send({"verb": "/set_alias", "body": alias})
 
 				## server returns the status of the request
-				#response = json.loads(self.s.recv(4096).decode("utf-8"))
 				response = self.comm_hdl.receive()
 
 				if response["success"] == "true":
@@ -71,12 +57,6 @@ class Client:
 				sys.exit(0)
 
 
-	@staticmethod
-	def prompt():
-		sys.stdout.write('Me: ')
-		sys.stdout.flush()
-
-
 	def __read_input(self):
 		"""
 		read the keyboard input then parse to a json object
@@ -88,17 +68,6 @@ class Client:
 		return msg
 
 
-	def __send_to_server(self, msg):
-		"""
-		send the json object to the server
-
-		:param msg: the json object
-		:return:
-		"""
-		data = json.dumps(msg)
-		self.s.send(bytes(data, "utf-8"))
-
-
 	def run_forever(self):
 		"""
 		the loop the keeps listening to both keyboard and the incoming traffic from the server
@@ -107,15 +76,12 @@ class Client:
 		"""
 		try:
 			while True:
-				#self.prompt()
 
-				#rlist, wlist, xlist = select.select(self.input_list, [], [])
-				rlist, wlist, xlist = self.comm_hdl.get_response()
+				rlist, *_ = self.comm_hdl.get_response()
 
 				for s in rlist:
 					## from the server
 					if s == self.comm_hdl.get_self_sock():
-						#data = s.recv(4096).decode("utf-8")
 						data = self.comm_hdl.receive()
 
 						if not data:
@@ -143,18 +109,10 @@ class Client:
 
 						## Parse.input_validator only returns 1 when msg["status"] == 1
 						if v == 1:
-							#self.__send_to_server(msg)
 							self.comm_hdl.send(msg)
 
 
 		except KeyboardInterrupt:
 			## Ctrl-C to quit
-			#self.s.close()
 			self.comm_hdl.close()
 			sys.exit(0)
-
-
-if __name__ == "__main__":
-	u = Client(log = False)
-	#print(u.alias)
-	u.run_forever()

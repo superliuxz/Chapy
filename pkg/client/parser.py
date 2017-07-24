@@ -1,4 +1,4 @@
-import json, tabulate
+import tabulate
 
 class Parser:
 
@@ -82,8 +82,6 @@ class Parser:
 		:param d: raw server inbound data
 		:return: new alias if /set_alias is successful
 		"""
-
-		#d = json.loads(data, encoding="utf-8")
 
 		if d["verb"] == "/say":
 			print("[{}]: {}".format(d["usr"], d["body"]))
