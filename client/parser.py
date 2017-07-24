@@ -16,14 +16,14 @@ class Parser:
 		"""
 		dictionary = {"status": 1, "usr":usr}
 
-		# enter empty string
+		## enter empty string
 		if input_str == "":
 			dictionary.update({"verb":""})
 			dictionary.update({"body":""})
 			dictionary["status"] = -1
 			return dictionary
 
-		# non-empty string
+		## non-empty string
 		if input_str[0] == "/":
 
 			## commands

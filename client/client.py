@@ -60,7 +60,7 @@ class Client:
 					print("The alias has been used!")
 
 			except KeyboardInterrupt:
-				# Ctrl-C to quit
+				## Ctrl-C to quit
 				self.s.close()
 				sys.exit(0)
 
@@ -106,7 +106,7 @@ class Client:
 				rlist, wlist, xlist = select.select(self.input_list, [], [])
 
 				for s in rlist:
-					# from the server
+					## from the server
 					if s == self.s:
 						data = s.recv(4096).decode("utf-8")
 
@@ -123,7 +123,7 @@ class Client:
 							if parsed_result:
 								self.alias = parsed_result
 
-					# from the keyboard
+					## from the keyboard
 					else:
 						msg = self.__read_input()
 
@@ -139,7 +139,7 @@ class Client:
 
 
 		except KeyboardInterrupt:
-			# Ctrl-C to quit
+			## Ctrl-C to quit
 			self.s.close()
 			sys.exit(0)
 

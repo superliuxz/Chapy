@@ -58,25 +58,25 @@ class Server:
 
 				for s in rlist:
 
-					# new client connection
+					## new client connection
 					if s == self.s:
 						sock, *_ = self.s.accept()
 						logging.info("{} has connected!\n".format(sock.getpeername()))
 						self.connections.append(sock)
 
-					# clients inbound traffic
+					## clients inbound traffic
 					else:
 						# TODO: need to make sure the client does not send a json longer than 4096!
 						data = s.recv(4096).decode("utf-8")
 						if self.log_flag: logging.info("DEBUG - received data: " + data)
-						# if the client calls socket.close(), the server will receive a empty string
+						## if the client calls socket.close(), the server will receive a empty string
 						if data:
 							d = json.loads(data, encoding = "utf-8")
 
-							# according to the verb, respond accordingly
+							## according to the verb, respond accordingly
 							verb = d["verb"]
 
-							response = d
+							response = {}
 
 							if verb == "/say":
 								response, s = self.server_info.broadcast(d)
@@ -97,20 +97,23 @@ class Server:
 							elif verb == "/lsusr":
 								response = self.server_info.lsusr(d)
 
+							## server returns the response back to the sender
 							self.send(response, s)
 
+							## if the response is successful, then notify the associated users
 							if response["success"] == "true":
 								self.notify(response)
 
 							if self.log_flag: self.server_logging()
 
-						# client Ctrl-C
+						## client Ctrl-C
 						else:
 							logging.info("{} has logged off.\n".format(s.getpeername()))
 
 							try:
 								self.server_info.remove_client(s)
 
+							## if the client Ctrl-C when entering the alias at login, the server will have no record of the client
 							except KeyError:
 								pass
 
