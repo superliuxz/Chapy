@@ -172,7 +172,7 @@ class ServerCommunicationHandler(CommunicationHandler):
 
 		self.add_sock(sock)
 
-		return sock.getpeername()
+		return sock
 
 	@staticmethod
 	def get_sock_info(s):
