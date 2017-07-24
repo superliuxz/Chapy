@@ -4,7 +4,7 @@ import select
 import socket
 import sys
 
-from server.ServerInfoExpert import ServerInfoExpert
+from pkg.server.ServerInfoExpert import ServerInfoExpert
 
 
 class Server:

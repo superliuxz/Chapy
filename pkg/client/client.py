@@ -4,7 +4,7 @@ import select
 import socket
 import sys
 
-from client.parser import Parser
+from pkg.client.parser import Parser
 
 
 class Client:
@@ -47,6 +47,7 @@ class Client:
 					continue
 				elif alias == "server" or alias == "Server":
 					print("[S|s]erver is reserved!")
+					continue
 
 				## send initial message to set alias
 				self.__send_to_server({"verb": "/set_alias", "body": alias})
