@@ -75,15 +75,15 @@ class Parser:
 		return self.__server_inbound(data)
 
 	@staticmethod
-	def __server_inbound(data):
+	def __server_inbound(d):
 		"""
 		parse server inbound message
 
-		:param data: raw server inbound data
+		:param d: raw server inbound data
 		:return: new alias if /set_alias is successful
 		"""
 
-		d = json.loads(data, encoding="utf-8")
+		#d = json.loads(data, encoding="utf-8")
 
 		if d["verb"] == "/say":
 			print("[{}]: {}".format(d["usr"], d["body"]))

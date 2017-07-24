@@ -9,28 +9,30 @@ class CommunicationHandler:
 		self.sock = socket.socket()
 		self.sel_list = [self.sock]
 
-	def send(self, dictionary, s):
-		return self.__send(dictionary, s)
+	def getter(self):
+		return self.sock
 
-	@staticmethod
-	def __send(dictionary, s):
+	def send(self, dictionary):
+		return self.__send(dictionary)
+
+	def __send(self, dictionary):
 		data = bytes(json.dumps(dictionary), "utf-8")
+		self.sock.send(data)
 
-		try:
-			for sock in s:
-				sock.send(data)
 
-		except TypeError:
-			s.send(data)
+	def receive(self):
+		return self.__recv()
 
-	def receive(self, s):
-		return self.__recv(s)
-
-	@staticmethod
-	def __recv(s):
-		data = s.recv()
+	def __recv(self):
+		data = self.sock.recv(4096)
 
 		return "" if not data else json.loads(data, encoding="utf-8")
+
+	def close(self):
+		self.__close()
+
+	def __close(self):
+		self.sock.close()
 
 	def get_response(self):
 		return select.select(self.sel_list, [], [])
@@ -46,11 +48,38 @@ class ServerCommunicationHandler(CommunicationHandler):
 		self.sock.bind((host, port))
 		self.sock.listen(5)
 
-	def add(self, sock):
+	@staticmethod
+	def __send(dictionary, s):
+		'''
+		overrides the method in base class
+
+		:param dictionary:
+		:param s:
+		:return:
+		'''
+		data = bytes(json.dumps(dictionary), "utf-8")
+
+		try:
+			for sock in s:
+				sock.send(data)
+
+		except TypeError:
+			s.send(data)
+
+	@staticmethod
+	def __recv(s):
+		data = s.recv(4096)
+
+		return "" if not data else json.loads(data, encoding="utf-8")
+
+	def add_sock(self, sock):
 		self.sel_list.append(sock)
 
-	def remove(self, sock):
+	def remove_sock(self, sock):
 		self.sel_list.remove(sock)
+
+	def accept_new_conn(self):
+		return self.sock.accept()
 
 
 class ClientCommunicationHandler(CommunicationHandler):
@@ -61,7 +90,7 @@ class ClientCommunicationHandler(CommunicationHandler):
 
 		try:
 			self.sock.connect((host, port))
-		except:
+		except ConnectionRefusedError or socket.gaierror:
 			print('Unable to connect {}@{}'.format(host, port))
 			sys.exit(1)
 

@@ -3,6 +3,7 @@ import logging
 import select
 import socket
 import sys
+from ..CommunicationHandler.CommunicationHandler import ClientCommunicationHandler
 
 from pkg.client.parser import Parser
 
@@ -18,15 +19,17 @@ class Client:
 
 		self.alias = None
 
-		self.s = socket.socket()
+		# self.s = socket.socket()
+		#
+		# self.input_list = [sys.stdin, self.s]
+		#
+		# try:
+		# 	self.s.connect((host, port))
+		# except:
+		# 	print('Unable to connect {}@{}'.format(host, port))
+		# 	sys.exit(1)
 
-		self.input_list = [sys.stdin, self.s]
-
-		try:
-			self.s.connect((host, port))
-		except:
-			print('Unable to connect {}@{}'.format(host, port))
-			sys.exit(1)
+		self.comm_hdl = ClientCommunicationHandler(host, port)
 
 		self.alias = self.__ask_for_alias()
 
@@ -50,10 +53,12 @@ class Client:
 					continue
 
 				## send initial message to set alias
-				self.__send_to_server({"verb": "/set_alias", "body": alias})
+				#self.__send_to_server({"verb": "/set_alias", "body": alias})
+				self.comm_hdl.send({"verb": "/set_alias", "body": alias})
 
 				## server returns the status of the request
-				response = json.loads(self.s.recv(4096).decode("utf-8"))
+				#response = json.loads(self.s.recv(4096).decode("utf-8"))
+				response = self.comm_hdl.receive()
 
 				if response["success"] == "true":
 					return alias
@@ -62,7 +67,7 @@ class Client:
 
 			except KeyboardInterrupt:
 				## Ctrl-C to quit
-				self.s.close()
+				self.comm_hdl.close()
 				sys.exit(0)
 
 
@@ -104,12 +109,14 @@ class Client:
 			while True:
 				#self.prompt()
 
-				rlist, wlist, xlist = select.select(self.input_list, [], [])
+				#rlist, wlist, xlist = select.select(self.input_list, [], [])
+				rlist, wlist, xlist = self.comm_hdl.get_response()
 
 				for s in rlist:
 					## from the server
-					if s == self.s:
-						data = s.recv(4096).decode("utf-8")
+					if s == self.comm_hdl.getter():
+						#data = s.recv(4096).decode("utf-8")
+						data = self.comm_hdl.receive()
 
 						if not data:
 							print("\nDisconnected from the server")
@@ -136,12 +143,14 @@ class Client:
 
 						## Parse.input_validator only returns 1 when msg["status"] == 1
 						if v == 1:
-							self.__send_to_server(msg)
+							#self.__send_to_server(msg)
+							self.comm_hdl.send(msg)
 
 
 		except KeyboardInterrupt:
 			## Ctrl-C to quit
-			self.s.close()
+			#self.s.close()
+			self.comm_hdl.close()
 			sys.exit(0)
 
 
