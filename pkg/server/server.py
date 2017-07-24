@@ -67,9 +67,9 @@ class Server:
 					#if s == self.s:
 					if s == self.comm_hdl.get_self_sock():
 						#sock, *_ = self.s.accept()
-						_ = self.comm_hdl.accept_new_conn()
+						sock = self.comm_hdl.accept_new_conn()
 						#logging.info("{} has connected!\n".format(sock.getpeername()))
-						logging.info("{} has connected!\n".format(_))
+						logging.info("{} has connected!\n".format(self.comm_hdl.get_sock_info(sock)))
 						#self.connections.append(sock)
 
 					## clients inbound traffic
@@ -117,7 +117,7 @@ class Server:
 
 						## client Ctrl-C
 						else:
-							logging.info("{} has logged off.\n".format(s.getpeername()))
+							logging.info("{} has logged off.\n".format(self.comm_hdl.get_sock_info(s)))
 
 							try:
 								self.server_info.remove_client(s)

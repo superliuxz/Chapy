@@ -174,6 +174,16 @@ class ServerCommunicationHandler(CommunicationHandler):
 
 		return sock.getpeername()
 
+	@staticmethod
+	def get_sock_info(s):
+		"""
+		get the connection of a socket
+
+		:param s: the target socket
+		:return: the conn info
+		"""
+		return s.getpeername()
+
 
 
 class ClientCommunicationHandler(CommunicationHandler):
