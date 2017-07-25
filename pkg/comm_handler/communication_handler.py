@@ -45,7 +45,7 @@ class CommunicationHandler:
 
 		data = self.sock.recv(4096)
 
-		return "" if not data else json.loads(data, encoding="utf-8")
+		return "" if not data else json.loads(data.decode("utf-8"))
 
 	def close(self):
 		"""
@@ -118,7 +118,7 @@ class ServerCommunicationHandler(CommunicationHandler):
 
 		data = s.recv(4096)
 
-		return "" if not data else json.loads(data, encoding="utf-8")
+		return "" if not data else json.loads(data.decode("utf-8"))
 
 	@staticmethod
 	def close(s):
