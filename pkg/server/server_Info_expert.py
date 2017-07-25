@@ -349,7 +349,13 @@ class ServerInfoExpert:
 		alias = d["usr"]
 		tgt_room = d["body"]
 
-		if alias not in self.__owner_to_room or tgt_room not in self.__room_to_owner:
+		if alias not in self.__owner_to_room:
+			d["success"] = "false"
+
+		elif tgt_room not in self.__room_to_owner:
+			d["success"] = "false"
+
+		elif tgt_room == self.__general_chatroom:
 			d["success"] = "false"
 
 		else:
