@@ -39,13 +39,13 @@ class Parser:
 
 				if verb == "/help":
 
-					body = "/join $chatroom: join a chatroom\n" \
+					body = "\n/join $chatroom: join a chatroom\n" \
 						   "/set_alias $alias: set an alias\n" \
 						   "/create $chatroom: create a chatroom\n" \
 						   "/block $alias: block a user\n" \
 						   "/unblock $alias: unblock a user\n" \
 						   "/delete $chatroom: delete a chatroom\n" \
-						   "/help: display help message"
+						   "/help: display help message\n"
 
 					dictionary["status"] = 0
 
