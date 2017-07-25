@@ -1,8 +1,8 @@
 import logging
 import socket
 import sys
-from pkg.server.ServerInfoExpert import ServerInfoExpert
-from ..CommunicationHandler.CommunicationHandler import ServerCommunicationHandler
+from pkg.server.server_Info_expert import ServerInfoExpert
+from ..comm_handler.communication_handler import ServerCommunicationHandler
 
 
 class Server:
@@ -91,7 +91,8 @@ class Server:
 
 							## if the response is successful, then notify the associated users
 							if response["success"] == "true":
-								self.notify(response)
+								if verb in ["/join", "/create", "/block", "/unblock", "/delete"]:
+									self.comm_hdl.send(*self.server_info.notify_usr(d))
 
 							if self.log_flag: self.server_logging()
 
@@ -115,14 +116,3 @@ class Server:
 			self.comm_hdl.close_all()
 			logging.info("Shutdown the server...")
 			sys.exit(0)
-
-	def notify(self, d):
-		"""
-		notify the associated clients with the actions
-
-		:param d: the data dictionary
-		:return:
-		"""
-		verb = d["verb"]
-		if verb in ["/join", "/create", "/block", "/unblock", "/delete"]:
-			self.comm_hdl.send(*self.server_info.notify_usr(d))

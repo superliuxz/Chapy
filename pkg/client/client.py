@@ -2,7 +2,7 @@ import json
 import logging
 import socket
 import sys
-from ..CommunicationHandler.CommunicationHandler import ClientCommunicationHandler
+from ..comm_handler.communication_handler import ClientCommunicationHandler
 from pkg.client.parser import Parser
 
 
@@ -15,11 +15,11 @@ class Client:
 
 		self.parser = Parser()
 
-		self.alias = None
+		self.__alias = None
 
-		self.comm_hdl = ClientCommunicationHandler(host, port)
+		self.__comm_hdl = ClientCommunicationHandler(host, port)
 
-		self.alias = self.__ask_for_alias()
+		self.__alias = self.__ask_for_alias()
 
 
 	def __ask_for_alias(self):
@@ -29,7 +29,7 @@ class Client:
 		:return:
 		"""
 
-		while not self.alias:
+		while not self.__alias:
 			try:
 				print("Please enter your alias:")
 
@@ -41,10 +41,10 @@ class Client:
 					continue
 
 				## send initial message to set alias
-				self.comm_hdl.send({"verb": "/set_alias", "body": alias})
+				self.__comm_hdl.send({"verb": "/set_alias", "body": alias})
 
 				## server returns the status of the request
-				response = self.comm_hdl.receive()
+				response = self.__comm_hdl.receive()
 
 				if response["success"] == "true":
 					return alias
@@ -53,7 +53,7 @@ class Client:
 
 			except KeyboardInterrupt:
 				## Ctrl-C to quit
-				self.comm_hdl.close()
+				self.__comm_hdl.close()
 				sys.exit(0)
 
 
@@ -64,7 +64,7 @@ class Client:
 		:return: the parsed json object
 		"""
 
-		msg = self.parser.client_input(self.alias, sys.stdin.readline().strip())
+		msg = self.parser.client_input(self.__alias, sys.stdin.readline().strip())
 		return msg
 
 
@@ -77,12 +77,12 @@ class Client:
 		try:
 			while True:
 
-				rlist, *_ = self.comm_hdl.get_response()
+				rlist, *_ = self.__comm_hdl.get_response()
 
 				for s in rlist:
 					## from the server
-					if s == self.comm_hdl.get_self_sock():
-						data = self.comm_hdl.receive()
+					if s == self.__comm_hdl.get_self_sock():
+						data = self.__comm_hdl.receive()
 
 						if not data:
 							print("\nDisconnected from the server")
@@ -95,7 +95,7 @@ class Client:
 
 							## Parser.server_inbound only returns when alias is changed
 							if parsed_result:
-								self.alias = parsed_result
+								self.__alias = parsed_result
 
 					## from the keyboard
 					else:
@@ -109,10 +109,10 @@ class Client:
 
 						## Parse.input_validator only returns 1 when msg["status"] == 1
 						if v == 1:
-							self.comm_hdl.send(msg)
+							self.__comm_hdl.send(msg)
 
 
 		except KeyboardInterrupt:
 			## Ctrl-C to quit
-			self.comm_hdl.close()
+			self.__comm_hdl.close()
 			sys.exit(0)

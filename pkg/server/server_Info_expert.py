@@ -370,18 +370,8 @@ class ServerInfoExpert:
 		return d
 
 
-	def lsroom(self, d):
-		"""
-		wrapper to _lsroom
-
-		:param d: the data dictionary
-		:return:
-		"""
-
-		return self.__lsroom(d)
-
 	## /lsroom
-	def __lsroom(self, d):
+	def lsroom(self, d):
 		"""
 		list all chatrooms on the server
 
@@ -398,17 +388,8 @@ class ServerInfoExpert:
 		return d
 
 
-	def lsusr(self, d):
-		"""
-		wrapper to _lsusr
-
-		:param d: the data dictionary
-		:return:
-		"""
-		return self.__lsusr(d)
-
 	## /lsusr
-	def __lsusr(self, d):
+	def lsusr(self, d):
 		"""
 		list all users and the rooms they are in
 
