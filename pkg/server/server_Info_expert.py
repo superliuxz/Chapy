@@ -347,12 +347,14 @@ class ServerInfoExpert:
 		"""
 
 		alias = d["usr"]
+		tgt_room = d["body"]
 
-		if alias not in self.__owner_to_room:
+		if alias not in self.__owner_to_room or tgt_room not in self.__room_to_owner:
 			d["success"] = "false"
 
 		else:
 			room = self.__owner_to_room[alias]
+			assert(room == tgt_room)
 			alive_clients = self.__room_to_alias[room]
 
 			##
