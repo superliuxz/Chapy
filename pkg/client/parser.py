@@ -110,17 +110,19 @@ class Parser:
 
 				elif d["verb"] == "/lsroom":
 					rooms = d["rooms"]
-					print("[Server]: Available rooms: {}".format(len(rooms)))
+					print("\n[Server]: Available rooms: {}".format(len(rooms)))
 					print(tabulate.tabulate([[_] for _ in rooms],
 											headers = ['Chatroom'],
 											tablefmt = 'orgtbl'))
+					print()
 
 				elif d["verb"] == "/lsusr":
 					lu = d["live_users"]
-					print("[Server]: Alive users: {}".format(len(lu)))
+					print("\n[Server]: Alive users: {}".format(len(lu)))
 					print(tabulate.tabulate([[_[0], _[1]] for _ in lu],
 											headers = ['Alias', 'Chatroom'],
 											tablefmt = 'orgtbl'))
+					print()
 
 			else:
 				## TODO: add failed reason?
