@@ -22,7 +22,7 @@ class ServerInfoExpert:
 		:return: all the private dictionaries
 		"""
 
-		return self.__sock_to_alias, self.__alias_to_sock, self.__room_to_alias, self.__owner_to_room, \
+		return  self.__alias_to_sock, self.__sock_to_alias, self.__room_to_alias, self.__owner_to_room, \
 				self.__room_to_owner, self.__room_blk_list
 
 
@@ -323,6 +323,8 @@ class ServerInfoExpert:
 			if tgt_alias in self.__room_blk_list[room]:
 				self.__room_blk_list[room].remove(tgt_alias)
 				d["success"] = "true"
+			else:
+				d["success"] = "false"
 
 		return d
 
