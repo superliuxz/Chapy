@@ -227,7 +227,7 @@ class ServerInfoExpert:
 			self.__room_to_alias[old_room].remove(usr)
 		except KeyError:
 			pass
-		
+
 		self.__alias_to_sock[usr] = [soc, new_room]
 
 
