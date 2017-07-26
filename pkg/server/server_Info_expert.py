@@ -222,10 +222,12 @@ class ServerInfoExpert:
 
 		soc = self.__alias_to_sock[usr][0]
 		self.__room_to_alias[new_room].add(usr)
+
 		try:
 			self.__room_to_alias[old_room].remove(usr)
 		except KeyError:
 			pass
+		
 		self.__alias_to_sock[usr] = [soc, new_room]
 
 
@@ -251,13 +253,13 @@ class ServerInfoExpert:
 		new_room = d["body"]
 		alias = d["usr"]
 
-		if new_room in self.__room_to_owner:
-			d["success"] = "false"
-			d["reason"] = "The room already exists!"
-
-		elif alias in self.__owner_to_room:
+		if alias in self.__owner_to_room:
 			d["success"] = "false"
 			d["reason"] = "You can only create maximum one chatroom!"
+
+		elif new_room in self.__room_to_owner:
+			d["success"] = "false"
+			d["reason"] = "The room already exists!"
 
 		else:
 			self.__room_to_owner[new_room] = alias
@@ -295,13 +297,13 @@ class ServerInfoExpert:
 		alias = d["usr"]
 
 		## if the user is not any room owners, or the blocked user alias DNE, then false
-		if alias not in self.__owner_to_room:
-			d["success"] = "false"
-			d["reason"] = "You are not the owner of any chatroom!"
-
-		elif tgt_alias not in self.__alias_to_sock:
+		if tgt_alias not in self.__alias_to_sock:
 			d["success"] = "false"
 			d["reason"] = "The block user alias does not exist!"
+
+		elif alias not in self.__owner_to_room:
+			d["success"] = "false"
+			d["reason"] = "You are not the owner of any chatroom!"
 
 		else:
 			room = self.__owner_to_room[alias]
@@ -334,13 +336,13 @@ class ServerInfoExpert:
 		tgt_alias = d["body"]
 		alias = d["usr"]
 
-		if alias not in self.__owner_to_room:
-			d["success"] = "false"
-			d["reason"] = "You are not the owner of any chatroom!"
-
-		elif tgt_alias not in self.__alias_to_sock:
+		if tgt_alias not in self.__alias_to_sock:
 			d["success"] = "false"
 			d["reason"] = "The unblock user alias does not exist!"
+
+		elif alias not in self.__owner_to_room:
+			d["success"] = "false"
+			d["reason"] = "You are not the owner of any chatroom!"
 
 		else:
 			room = self.__owner_to_room[alias]
@@ -375,17 +377,17 @@ class ServerInfoExpert:
 		alias = d["usr"]
 		tgt_room = d["body"]
 
-		if alias not in self.__owner_to_room:
+		if tgt_room == self.__general_chatroom:
 			d["success"] = "false"
-			d["reason"] = "You are not the owner of any chatroom!"
+			d["reason"] = "You cannot delete the general chatroom!"
 
 		elif tgt_room not in self.__room_to_owner:
 			d["success"] = "false"
 			d["reason"] = "The target room does not exist!"
 
-		elif tgt_room == self.__general_chatroom:
+		elif alias not in self.__owner_to_room:
 			d["success"] = "false"
-			d["reason"] = "You cannot delete the general chatroom!"
+			d["reason"] = "You are not the owner of any chatroom!"
 
 		else:
 			room = self.__owner_to_room[alias]
