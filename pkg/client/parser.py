@@ -126,7 +126,7 @@ class Parser:
 
 			else:
 				## TODO: add failed reason?
-				print("[Server]: {} operation failed!".format(d["verb"]))
+				print("[Server]: {} operation failed! Reason: {}".format(d["verb"], d["reason"]))
 
 
 	def input_validator(self, msg):
