@@ -1,5 +1,5 @@
 # Python Chat Program
-SENG299 poject repo for the client-server chat program written in Python3, using `socket` and `select`.
+A centralized client-server chat program written in Python3, using `socket` and `select`.
 
 Dependencies: `pip3 install -r requirements.txt` 
 
